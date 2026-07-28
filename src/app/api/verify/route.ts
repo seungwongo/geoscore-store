@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyPaddleTransaction } from "@/lib/paddle";
-import { createDownloadToken } from "@/lib/token";
 import { sendCustomerEmail, sendNotifyEmail } from "@/lib/email";
+import { supabaseAdmin, DOWNLOADS_TABLE, DOWNLOAD_TTL_MS } from "@/lib/supabase";
 import { isLocale, defaultLocale, type Locale } from "@/lib/i18n";
 
 export const runtime = "nodejs";
@@ -38,13 +38,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "not_paid" }, { status: 402 });
   }
 
-  const deliverTo = verified.email || email;
-  const token = createDownloadToken(deliverTo, verified.id);
+  const deliverTo = (verified.email || email).toLowerCase();
+  const expiresAt = new Date(Date.now() + DOWNLOAD_TTL_MS).toISOString();
 
-  // Send the customer email (with zip attached). Never block the download on email failure.
+  // Create the download record (unique id ↔ buyer email, 30-day validity).
+  let downloadId: string;
+  try {
+    const { data, error } = await supabaseAdmin()
+      .from(DOWNLOADS_TABLE)
+      .insert({ email: deliverTo, transaction_id: verified.id, expires_at: expiresAt })
+      .select("id")
+      .single();
+    if (error || !data) throw error ?? new Error("insert returned no row");
+    downloadId = data.id as string;
+  } catch (err) {
+    console.error("[verify] supabase insert failed:", err);
+    return NextResponse.json({ error: "store_failed" }, { status: 500 });
+  }
+
+  // Send the customer email (download link). Never block delivery on email failure.
   let customerEmailSent = false;
   try {
-    await sendCustomerEmail({ to: deliverTo, locale, downloadToken: token });
+    await sendCustomerEmail({ to: deliverTo, locale, downloadId });
     customerEmailSent = true;
   } catch (err) {
     console.error("[verify] customer email failed:", err);
@@ -62,5 +77,5 @@ export async function POST(req: NextRequest) {
     console.error("[verify] notify email failed:", err);
   }
 
-  return NextResponse.json({ token, emailSent: customerEmailSent });
+  return NextResponse.json({ id: downloadId, emailSent: customerEmailSent });
 }

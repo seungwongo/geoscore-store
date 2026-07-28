@@ -1,21 +1,40 @@
 import Link from "next/link";
 import { getDictionary, isLocale, defaultLocale, type Locale } from "@/lib/i18n";
-import { verifyDownloadToken } from "@/lib/token";
+import { supabaseAdmin, DOWNLOADS_TABLE } from "@/lib/supabase";
+import DownloadVerify from "@/components/DownloadVerify";
 
 export const dynamic = "force-dynamic";
 
-export default function DownloadPage({
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** True only when the id maps to an existing, non-expired download record. */
+async function isValidLink(id: string | undefined): Promise<boolean> {
+  if (!id || !UUID_RE.test(id)) return false;
+  try {
+    const { data, error } = await supabaseAdmin()
+      .from(DOWNLOADS_TABLE)
+      .select("expires_at")
+      .eq("id", id)
+      .maybeSingle();
+    if (error || !data) return false;
+    return new Date(data.expires_at as string).getTime() >= Date.now();
+  } catch {
+    return false;
+  }
+}
+
+export default async function DownloadPage({
   params,
   searchParams,
 }: {
   params: { locale: string };
-  searchParams: { token?: string };
+  searchParams: { id?: string };
 }) {
   const locale: Locale = isLocale(params.locale) ? params.locale : defaultLocale;
   const t = getDictionary(locale).download;
-  const payload = verifyDownloadToken(searchParams.token);
+  const valid = await isValidLink(searchParams.id);
 
-  if (!payload) {
+  if (!valid) {
     return (
       <main className="dl">
         <span className="badge-ok blocked-badge">{t.blockedEyebrow}</span>
@@ -30,38 +49,5 @@ export default function DownloadPage({
     );
   }
 
-  const downloadUrl = `/api/download?token=${encodeURIComponent(searchParams.token || "")}`;
-
-  return (
-    <main className="dl">
-      <div className="dl-mark">◔</div>
-      <span className="badge-ok">{t.okEyebrow}</span>
-      <h1>{t.okTitle}</h1>
-      <p>{t.okDesc}</p>
-      <p style={{ marginTop: 6 }}>
-        {t.forEmail} <span className="email-tag">{payload.email}</span>
-      </p>
-
-      <p style={{ marginTop: 24 }}>
-        <a className="btn" href={downloadUrl}>
-          {t.button}
-        </a>
-      </p>
-
-      <div className="install-box">
-        <h3>{t.installTitle}</h3>
-        <ol>
-          {t.installSteps.map((s, i) => (
-            <li key={i}>{s}</li>
-          ))}
-        </ol>
-      </div>
-
-      <p>
-        <Link className="back" href={`/${locale}`}>
-          {t.backHome}
-        </Link>
-      </p>
-    </main>
-  );
+  return <DownloadVerify id={searchParams.id!} locale={locale} t={t} />;
 }

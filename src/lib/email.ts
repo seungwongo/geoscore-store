@@ -1,6 +1,5 @@
 import nodemailer from "nodemailer";
 import { getDictionary, type Locale } from "@/lib/i18n";
-import { ZIP_FILENAME, zipPath } from "@/lib/asset";
 
 const BRAND = "#2563eb";
 const BRAND_DARK = "#1d4ed8";
@@ -99,11 +98,13 @@ function customerHtml(locale: Locale, downloadUrl: string): string {
 export async function sendCustomerEmail(params: {
   to: string;
   locale: Locale;
-  downloadToken: string;
+  downloadId: string;
 }): Promise<void> {
   const t = getDictionary(params.locale).email.customer;
-  const downloadUrl = `${appUrl()}/${params.locale}/download?token=${encodeURIComponent(
-    params.downloadToken,
+  // Link only — the buyer verifies their email on the download page and then
+  // downloads. (Gmail blocks Chrome-extension zips as attachments.)
+  const downloadUrl = `${appUrl()}/${params.locale}/download?id=${encodeURIComponent(
+    params.downloadId,
   )}`;
 
   await transport().sendMail({
@@ -111,7 +112,6 @@ export async function sendCustomerEmail(params: {
     to: params.to,
     subject: t.subject,
     html: customerHtml(params.locale, downloadUrl),
-    attachments: [{ filename: ZIP_FILENAME, path: zipPath() }],
   });
 }
 

@@ -1,10 +1,10 @@
 import crypto from "crypto";
 
-const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+const FIFTEEN_MIN_MS = 15 * 60 * 1000;
 
 export interface DownloadTokenPayload {
   email: string;
-  txn: string;
+  txn: string; // carries the download record id
   exp: number; // epoch ms
 }
 
@@ -26,12 +26,20 @@ function sign(payloadB64: string): string {
   return b64url(crypto.createHmac("sha256", secret()).update(payloadB64).digest());
 }
 
-/** Create a signed, tamper-proof download token valid for 30 days. */
-export function createDownloadToken(email: string, txn: string): string {
+/**
+ * Create a signed, tamper-proof, short-lived download grant. Issued only after
+ * the buyer's email has been verified against the Supabase record; used solely
+ * to authorize the actual file stream (default 15 min).
+ */
+export function createDownloadToken(
+  email: string,
+  txn: string,
+  ttlMs: number = FIFTEEN_MIN_MS,
+): string {
   const payload: DownloadTokenPayload = {
     email,
     txn,
-    exp: Date.now() + THIRTY_DAYS_MS,
+    exp: Date.now() + ttlMs,
   };
   const payloadB64 = b64url(JSON.stringify(payload));
   return `${payloadB64}.${sign(payloadB64)}`;

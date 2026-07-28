@@ -64,8 +64,8 @@ export default function PurchaseButton({
         body: JSON.stringify({ transactionId, email: cleanEmail, locale }),
       });
       if (!res.ok) throw new Error("verify failed");
-      const data = (await res.json()) as { token: string };
-      window.location.href = `/${locale}/download?token=${encodeURIComponent(data.token)}`;
+      const data = (await res.json()) as { id: string };
+      window.location.href = `/${locale}/download?id=${encodeURIComponent(data.id)}`;
     } catch {
       setError(modal.error);
       setStatus(null);
