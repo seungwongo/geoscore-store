@@ -8,16 +8,25 @@ import LogoutButton from "@/components/LogoutButton";
 
 export const dynamic = "force-dynamic";
 
-const WINDOW_DAYS = 30;
+const FUNNEL_DAYS = 30;
 const TREND_DAYS = 14;
+const TREND_MONTHS = 6;
 
-interface Row {
+interface AnalyticsRow {
   event_type: "page_view" | "buy_click" | "purchase";
   session_id: string | null;
   country: string | null;
   language: string | null;
-  locale: string | null;
+  created_at: string;
+}
+
+interface DownloadRow {
+  amount: number | null;
+  currency: string | null;
+  session_id: string | null;
+  download_count: number | null;
   transaction_id: string | null;
+  email: string | null;
   created_at: string;
 }
 
@@ -26,7 +35,15 @@ function pct(n: number, d: number): string {
   return `${((n / d) * 100).toFixed(1)}%`;
 }
 
-function topCounts(rows: Row[], key: "country" | "language" | "locale", limit = 8) {
+function money(amount: number, currency: string): string {
+  try {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount);
+  } catch {
+    return `${amount.toFixed(2)} ${currency}`;
+  }
+}
+
+function topCounts(rows: AnalyticsRow[], key: "country" | "language", limit = 8) {
   const map = new Map<string, number>();
   for (const r of rows) {
     const k = (r[key] || "—").toUpperCase();
@@ -53,59 +70,164 @@ function Bars({ data }: { data: [string, number][] }) {
   );
 }
 
+function Trend({
+  buckets,
+  labelOf,
+  primaryCur,
+}: {
+  buckets: { key: string; views: number; purchases: number; revenue: number }[];
+  labelOf: (key: string) => string;
+  primaryCur: string;
+}) {
+  const maxViews = Math.max(1, ...buckets.map((b) => b.views));
+  return (
+    <div className="dash-trend">
+      {buckets.map((b) => (
+        <div
+          className="dash-trend-col"
+          key={b.key}
+          title={`${b.key} · ${b.views}뷰 · ${b.purchases}구매 · ${money(b.revenue, primaryCur)}`}
+        >
+          <span className="dash-trend-bar" style={{ height: `${(b.views / maxViews) * 100}%` }}>
+            {b.purchases > 0 && (
+              <span
+                className="dash-trend-buy"
+                style={{ height: `${Math.min(100, (b.purchases / Math.max(1, b.views)) * 100)}%` }}
+              />
+            )}
+          </span>
+          <span className="dash-trend-day">{labelOf(b.key)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default async function AdminDashboard({ params }: { params: { locale: string } }) {
   const locale: Locale = isLocale(params.locale) ? params.locale : defaultLocale;
   const admin = getAdminSession();
   if (!admin) redirect(`/${locale}`);
 
-  const since = new Date(Date.now() - WINDOW_DAYS * 864e5).toISOString();
+  const now = Date.now();
+  const sinceAnalytics = new Date(now - TREND_MONTHS * 31 * 864e5).toISOString();
+  const since30 = new Date(now - FUNNEL_DAYS * 864e5).toISOString();
   const sb = supabaseAdmin();
 
-  const { data: rowsData } = await sb
-    .from(ANALYTICS_TABLE)
-    .select("event_type, session_id, country, language, locale, transaction_id, created_at")
-    .gte("created_at", since)
-    .order("created_at", { ascending: false })
-    .limit(50000);
-  const rows = (rowsData ?? []) as Row[];
+  const [{ data: aData }, { data: dData }] = await Promise.all([
+    sb
+      .from(ANALYTICS_TABLE)
+      .select("event_type, session_id, country, language, created_at")
+      .gte("created_at", sinceAnalytics)
+      .order("created_at", { ascending: false })
+      .limit(100000),
+    sb
+      .from(DOWNLOADS_TABLE)
+      .select("amount, currency, session_id, download_count, transaction_id, email, created_at")
+      .order("created_at", { ascending: false })
+      .limit(5000),
+  ]);
+  const rows = (aData ?? []) as AnalyticsRow[];
+  const downloads = (dData ?? []) as DownloadRow[];
 
-  const { count: purchaseTotal } = await sb
-    .from(DOWNLOADS_TABLE)
-    .select("*", { count: "exact", head: true });
+  // ----- Revenue (all-time, from download records) -----
+  const revenueByCur = new Map<string, number>();
+  const countByCur = new Map<string, number>();
+  let totalDownloads = 0;
+  for (const d of downloads) {
+    totalDownloads += d.download_count ?? 0;
+    if (d.amount == null) continue;
+    const c = d.currency || "USD";
+    revenueByCur.set(c, (revenueByCur.get(c) ?? 0) + Number(d.amount));
+    countByCur.set(c, (countByCur.get(c) ?? 0) + 1);
+  }
+  const currencies = [...revenueByCur.keys()].sort(
+    (a, b) => (countByCur.get(b) ?? 0) - (countByCur.get(a) ?? 0),
+  );
+  const primaryCur = currencies[0] ?? "USD";
+  const totalRevenue = revenueByCur.get(primaryCur) ?? 0;
+  const totalPurchases = downloads.length;
+  const paidCount = countByCur.get(primaryCur) ?? 0;
+  const aov = paidCount ? totalRevenue / paidCount : 0;
 
-  const pv = rows.filter((r) => r.event_type === "page_view");
-  const bc = rows.filter((r) => r.event_type === "buy_click");
-  const pu = rows.filter((r) => r.event_type === "purchase");
+  const monthKey = (iso: string) => iso.slice(0, 7);
+  const thisMonth = new Date(now).toISOString().slice(0, 7);
+  let thisMonthRevenue = 0;
+  let thisMonthPurchases = 0;
+  for (const d of downloads) {
+    if (monthKey(d.created_at) === thisMonth) {
+      thisMonthPurchases += 1;
+      if (d.amount != null && (d.currency || "USD") === primaryCur) thisMonthRevenue += Number(d.amount);
+    }
+  }
 
-  const sessionsOf = (rs: Row[]) => new Set(rs.map((r) => r.session_id).filter(Boolean));
+  // ----- Funnel (last 30 days) -----
+  const in30 = (iso: string) => iso >= since30;
+  const pv = rows.filter((r) => r.event_type === "page_view" && in30(r.created_at));
+  const bc = rows.filter((r) => r.event_type === "buy_click" && in30(r.created_at));
+  const sessionsOf = <T extends { session_id: string | null }>(rs: T[]) =>
+    new Set(rs.map((r) => r.session_id).filter(Boolean));
   const visitors = sessionsOf(pv).size;
   const buyClickSessions = sessionsOf(bc).size;
-  const purchaseSessions = sessionsOf(pu).size;
+  const purchases30 = downloads.filter((d) => in30(d.created_at));
+  const purchaseSessions30 = sessionsOf(purchases30).size;
 
-  // Daily trend (last TREND_DAYS days).
-  const days: { day: string; pv: number; buy: number; purchase: number }[] = [];
+  // ----- Daily trend (14 days) -----
+  const dayKey = (iso: string) => iso.slice(0, 10);
+  const days: { key: string; views: number; purchases: number; revenue: number }[] = [];
   for (let i = TREND_DAYS - 1; i >= 0; i--) {
-    const d = new Date(Date.now() - i * 864e5).toISOString().slice(0, 10);
-    days.push({ day: d, pv: 0, buy: 0, purchase: 0 });
+    days.push({ key: new Date(now - i * 864e5).toISOString().slice(0, 10), views: 0, purchases: 0, revenue: 0 });
   }
-  const dayIndex = new Map(days.map((d, i) => [d.day, i]));
+  const dayIdx = new Map(days.map((d, i) => [d.key, i]));
   for (const r of rows) {
-    const idx = dayIndex.get(r.created_at.slice(0, 10));
-    if (idx === undefined) continue;
-    if (r.event_type === "page_view") days[idx].pv++;
-    else if (r.event_type === "buy_click") days[idx].buy++;
-    else if (r.event_type === "purchase") days[idx].purchase++;
+    if (r.event_type !== "page_view") continue;
+    const i = dayIdx.get(dayKey(r.created_at));
+    if (i !== undefined) days[i].views += 1;
   }
-  const maxDayPv = Math.max(1, ...days.map((d) => d.pv));
+  for (const d of downloads) {
+    const i = dayIdx.get(dayKey(d.created_at));
+    if (i !== undefined) {
+      days[i].purchases += 1;
+      if (d.amount != null && (d.currency || "USD") === primaryCur) days[i].revenue += Number(d.amount);
+    }
+  }
 
-  const recentPurchases = pu.slice(0, 12);
+  // ----- Monthly trend (6 months) -----
+  const months: { key: string; views: number; purchases: number; revenue: number }[] = [];
+  {
+    const base = new Date(now);
+    for (let i = TREND_MONTHS - 1; i >= 0; i--) {
+      const d = new Date(base.getFullYear(), base.getMonth() - i, 1);
+      months.push({ key: d.toISOString().slice(0, 7), views: 0, purchases: 0, revenue: 0 });
+    }
+  }
+  const monIdx = new Map(months.map((m, i) => [m.key, i]));
+  for (const r of rows) {
+    if (r.event_type !== "page_view") continue;
+    const i = monIdx.get(monthKey(r.created_at));
+    if (i !== undefined) months[i].views += 1;
+  }
+  for (const d of downloads) {
+    const i = monIdx.get(monthKey(d.created_at));
+    if (i !== undefined) {
+      months[i].purchases += 1;
+      if (d.amount != null && (d.currency || "USD") === primaryCur) months[i].revenue += Number(d.amount);
+    }
+  }
 
-  const stats = [
-    { label: "방문자 (고유 세션)", value: visitors, sub: `${pv.length} 페이지뷰` },
-    { label: "구매 버튼 클릭", value: buyClickSessions, sub: `${bc.length} 클릭` },
-    { label: "구매 완료", value: purchaseSessions, sub: `누적 ${purchaseTotal ?? 0}건` },
-    { label: "클릭 → 구매 전환", value: pct(purchaseSessions, buyClickSessions), sub: "구매/클릭 세션" },
-    { label: "방문 → 구매 전환", value: pct(purchaseSessions, visitors), sub: "구매/방문 세션" },
+  const recent = downloads.slice(0, 12);
+
+  const revenueStats = [
+    { label: "총 매출", value: money(totalRevenue, primaryCur), sub: currencies.length > 1 ? "주 통화 기준" : "전체 기간" },
+    { label: "이번 달 매출", value: money(thisMonthRevenue, primaryCur), sub: `${thisMonthPurchases}건` },
+    { label: "총 구매", value: totalPurchases, sub: "전체 기간" },
+    { label: "평균 구매액", value: money(aov, primaryCur), sub: "결제당" },
+  ];
+  const funnelStats = [
+    { label: "방문자", value: visitors, sub: `${pv.length} 페이지뷰` },
+    { label: "구매버튼 클릭", value: buyClickSessions, sub: `${bc.length} 클릭` },
+    { label: "구매 완료", value: purchaseSessions30 || purchases30.length, sub: `${purchases30.length}건` },
+    { label: "클릭→구매 전환", value: pct(purchaseSessions30, buyClickSessions), sub: "세션 기준" },
+    { label: "다운로드 실행", value: totalDownloads, sub: "누적" },
   ];
 
   return (
@@ -113,9 +235,7 @@ export default async function AdminDashboard({ params }: { params: { locale: str
       <div className="dash-head">
         <div>
           <h1>대시보드</h1>
-          <p className="meta">
-            최근 {WINDOW_DAYS}일 · {admin.email}
-          </p>
+          <p className="meta">{admin.email}</p>
         </div>
         <div className="dash-head-actions">
           <Link className="back" href={`/${locale}`}>
@@ -125,8 +245,26 @@ export default async function AdminDashboard({ params }: { params: { locale: str
         </div>
       </div>
 
+      <h2 className="dash-section">매출 · 구매 <span className="meta">(전체 기간)</span></h2>
+      <div className="dash-stats dash-stats-4">
+        {revenueStats.map((s) => (
+          <div className="dash-stat" key={s.label}>
+            <div className="dash-stat-val">{s.value}</div>
+            <div className="dash-stat-label">{s.label}</div>
+            <div className="dash-stat-sub">{s.sub}</div>
+          </div>
+        ))}
+      </div>
+      {currencies.length > 1 && (
+        <p className="meta" style={{ marginTop: 8 }}>
+          통화별 매출:{" "}
+          {currencies.map((c) => `${money(revenueByCur.get(c) ?? 0, c)}`).join(" · ")}
+        </p>
+      )}
+
+      <h2 className="dash-section">유입 · 전환 <span className="meta">(최근 {FUNNEL_DAYS}일)</span></h2>
       <div className="dash-stats">
-        {stats.map((s) => (
+        {funnelStats.map((s) => (
           <div className="dash-stat" key={s.label}>
             <div className="dash-stat-val">{s.value}</div>
             <div className="dash-stat-label">{s.label}</div>
@@ -137,52 +275,46 @@ export default async function AdminDashboard({ params }: { params: { locale: str
 
       <div className="dash-cols">
         <section className="dash-card">
-          <h2>일별 추이 (최근 {TREND_DAYS}일)</h2>
-          <div className="dash-trend">
-            {days.map((d) => (
-              <div className="dash-trend-col" key={d.day} title={`${d.day} · ${d.pv}뷰 · ${d.purchase}구매`}>
-                <span className="dash-trend-bar" style={{ height: `${(d.pv / maxDayPv) * 100}%` }}>
-                  {d.purchase > 0 && (
-                    <span
-                      className="dash-trend-buy"
-                      style={{ height: `${Math.min(100, (d.purchase / Math.max(1, d.pv)) * 100)}%` }}
-                    />
-                  )}
-                </span>
-                <span className="dash-trend-day">{d.day.slice(5)}</span>
-              </div>
-            ))}
-          </div>
+          <h2>일별 추이 <span className="meta">(최근 {TREND_DAYS}일)</span></h2>
+          <Trend buckets={days} labelOf={(k) => k.slice(5)} primaryCur={primaryCur} />
           <p className="meta">막대 = 페이지뷰, 하단 초록 = 구매</p>
         </section>
 
         <section className="dash-card">
-          <h2>국가별 (페이지뷰)</h2>
+          <h2>월별 추이 <span className="meta">(최근 {TREND_MONTHS}개월)</span></h2>
+          <Trend buckets={months} labelOf={(k) => k.slice(2)} primaryCur={primaryCur} />
+          <p className="meta">막대 = 페이지뷰, 하단 초록 = 구매</p>
+        </section>
+
+        <section className="dash-card">
+          <h2>국가별 <span className="meta">(페이지뷰)</span></h2>
           <Bars data={topCounts(pv, "country")} />
         </section>
 
         <section className="dash-card">
-          <h2>언어별 (페이지뷰)</h2>
+          <h2>언어별 <span className="meta">(페이지뷰)</span></h2>
           <Bars data={topCounts(pv, "language")} />
         </section>
 
-        <section className="dash-card">
+        <section className="dash-card dash-card-wide">
           <h2>최근 구매</h2>
-          {recentPurchases.length === 0 ? (
+          {recent.length === 0 ? (
             <p className="meta">데이터 없음</p>
           ) : (
             <table className="dash-table">
               <tbody>
                 <tr>
                   <th>시각</th>
-                  <th>국가</th>
+                  <th>금액</th>
+                  <th>이메일</th>
                   <th>트랜잭션</th>
                 </tr>
-                {recentPurchases.map((r, i) => (
+                {recent.map((r, i) => (
                   <tr key={i}>
                     <td>{new Date(r.created_at).toLocaleString("ko-KR")}</td>
-                    <td>{(r.country || "—").toUpperCase()}</td>
-                    <td className="mono">{r.transaction_id?.slice(0, 20) ?? "—"}</td>
+                    <td>{r.amount != null ? money(Number(r.amount), r.currency || primaryCur) : "—"}</td>
+                    <td>{r.email ?? "—"}</td>
+                    <td className="mono">{r.transaction_id?.slice(0, 18) ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>

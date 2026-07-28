@@ -246,3 +246,13 @@ footer.site a { color: #93c5fd; text-decoration: none; }
   .dash-stats { grid-template-columns: 1fr 1fr; }
   .dash-cols { grid-template-columns: 1fr; }
 }
+
+/* dashboard additions */
+.dash-section { font-size: 15px; margin: 26px 0 12px; color: var(--ink); }
+.dash-section:first-of-type { margin-top: 8px; }
+.dash-stats-4 { grid-template-columns: repeat(4, 1fr); }
+.dash-card-wide { grid-column: 1 / -1; }
+.dash-table td:nth-child(3) { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 820px) {
+  .dash-stats-4 { grid-template-columns: 1fr 1fr; }
+}

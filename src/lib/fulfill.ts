@@ -58,6 +58,8 @@ export async function fulfillPurchase(params: {
       email,
       transaction_id: verified.id,
       session_id: params.sessionId ?? null,
+      amount: verified.amount,
+      currency: verified.currency,
       expires_at: expiresAt,
     })
     .select("id")

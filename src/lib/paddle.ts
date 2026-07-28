@@ -7,6 +7,8 @@ export interface VerifiedTransaction {
   id: string;
   status: string;
   email: string | null;
+  amount: number | null; // grand total in major units, e.g. 19.00
+  currency: string | null;
 }
 
 /**
@@ -44,9 +46,9 @@ export async function verifyPaddleTransaction(
     data?: {
       id?: string;
       status?: string;
+      currency_code?: string;
       customer?: { email?: string };
-      details?: { totals?: unknown };
-      billing_details?: unknown;
+      details?: { totals?: { grand_total?: string } };
     };
   };
 
@@ -57,10 +59,19 @@ export async function verifyPaddleTransaction(
   const paidStatuses = new Set(["completed", "paid", "billed"]);
   if (!paidStatuses.has(data.status)) return null;
 
+  // grand_total is a string in minor units (e.g. "1900" = 19.00).
+  const grandTotalMinor = data.details?.totals?.grand_total;
+  const amount =
+    grandTotalMinor != null && grandTotalMinor !== ""
+      ? Number(grandTotalMinor) / 100
+      : null;
+
   return {
     id: data.id,
     status: data.status,
     email: data.customer?.email ?? null,
+    amount: Number.isFinite(amount) ? amount : null,
+    currency: data.currency_code ?? null,
   };
 }
 
