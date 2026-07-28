@@ -198,6 +198,8 @@ footer.site a { color: #93c5fd; text-decoration: none; }
 .dl .install-box li { margin: 6px 0; }
 .dl .blocked-badge { background: var(--red-bg); color: #991b1b; }
 .dl-mark { width: 44px; height: 44px; border-radius: 12px; background: var(--blue); color: #fff; display: inline-grid; place-items: center; font-size: 24px; margin-bottom: 8px; }
+.spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid #dbeafe; border-top-color: var(--blue); margin: 8px auto 18px; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 .verify-form { max-width: 380px; margin: 26px auto 0; text-align: left; }
 .verify-form label { display: block; font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
 .verify-form input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 10px; font-size: 15px; font-family: inherit; }

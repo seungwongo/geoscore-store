@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyPaddleTransaction } from "@/lib/paddle";
-import { sendCustomerEmail, sendNotifyEmail } from "@/lib/email";
-import { supabaseAdmin, DOWNLOADS_TABLE, DOWNLOAD_TTL_MS } from "@/lib/supabase";
-import { recordEvent, countryFromHeaders, languageFromHeaders } from "@/lib/analytics";
+import { fulfillPurchase } from "@/lib/fulfill";
+import { countryFromHeaders, languageFromHeaders } from "@/lib/analytics";
 import { isLocale, defaultLocale, type Locale } from "@/lib/i18n";
 
 export const runtime = "nodejs";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 export async function POST(req: NextRequest) {
-  let body: { transactionId?: string; email?: string; locale?: string; sessionId?: string };
+  let body: { transactionId?: string; locale?: string; sessionId?: string };
   try {
     body = await req.json();
   } catch {
@@ -18,80 +14,30 @@ export async function POST(req: NextRequest) {
   }
 
   const transactionId = body.transactionId?.trim();
-  const email = body.email?.trim();
   const locale: Locale = isLocale(body.locale) ? body.locale : defaultLocale;
 
   if (!transactionId) {
     return NextResponse.json({ error: "missing_transaction" }, { status: 400 });
   }
-  if (!email || !EMAIL_RE.test(email)) {
-    return NextResponse.json({ error: "invalid_email" }, { status: 400 });
+
+  let result;
+  try {
+    result = await fulfillPurchase({
+      transactionId,
+      locale,
+      sessionId: body.sessionId?.slice(0, 64) ?? null,
+      country: countryFromHeaders(req.headers),
+      language: languageFromHeaders(req.headers),
+    });
+  } catch (err) {
+    console.error("[verify] fulfill failed:", err);
+    return NextResponse.json({ error: "server_error" }, { status: 500 });
   }
 
-  // Verify the payment server-side with Paddle.
-  let verified;
-  try {
-    verified = await verifyPaddleTransaction(transactionId);
-  } catch {
-    return NextResponse.json({ error: "server_misconfigured" }, { status: 500 });
-  }
-  if (!verified) {
+  if (!result) {
+    // Paddle may not have finalized the transaction yet — let the client retry.
     return NextResponse.json({ error: "not_paid" }, { status: 402 });
   }
 
-  const deliverTo = (verified.email || email).toLowerCase();
-  const expiresAt = new Date(Date.now() + DOWNLOAD_TTL_MS).toISOString();
-
-  // Create the download record (unique id ↔ buyer email, 30-day validity).
-  let downloadId: string;
-  try {
-    const { data, error } = await supabaseAdmin()
-      .from(DOWNLOADS_TABLE)
-      .insert({ email: deliverTo, transaction_id: verified.id, expires_at: expiresAt })
-      .select("id")
-      .single();
-    if (error || !data) throw error ?? new Error("insert returned no row");
-    downloadId = data.id as string;
-  } catch (err) {
-    console.error("[verify] supabase insert failed:", err);
-    return NextResponse.json({ error: "store_failed" }, { status: 500 });
-  }
-
-  // Send the customer email (download link). Never block delivery on email failure.
-  let customerEmailSent = false;
-  try {
-    await sendCustomerEmail({ to: deliverTo, locale, downloadId });
-    customerEmailSent = true;
-  } catch (err) {
-    console.error("[verify] customer email failed:", err);
-  }
-
-  // Notify the owner of the purchase.
-  try {
-    await sendNotifyEmail({
-      customerEmail: deliverTo,
-      txn: verified.id,
-      locale,
-      customerEmailSent,
-    });
-  } catch (err) {
-    console.error("[verify] notify email failed:", err);
-  }
-
-  // Record the purchase event for funnel analytics (never block on failure).
-  try {
-    await recordEvent({
-      event: "purchase",
-      sessionId: body.sessionId?.slice(0, 64) ?? null,
-      locale,
-      path: `/${locale}`,
-      country: countryFromHeaders(req.headers),
-      language: languageFromHeaders(req.headers),
-      transactionId: verified.id,
-    });
-  } catch (err) {
-    console.error("[verify] analytics record failed:", err);
-  }
-
-  return NextResponse.json({ id: downloadId, emailSent: customerEmailSent });
+  return NextResponse.json({ id: result.id });
 }

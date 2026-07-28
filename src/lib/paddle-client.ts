@@ -5,8 +5,6 @@
 const PADDLE_JS = "https://cdn.paddle.com/paddle/v2/paddle.js";
 
 let loadPromise: Promise<any> | null = null;
-let currentResolve: ((transactionId: string) => void) | null = null;
-let currentReject: ((reason?: unknown) => void) | null = null;
 
 function clientToken(): string {
   return process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN || "";
@@ -53,41 +51,33 @@ async function ensurePaddle(): Promise<any> {
     const token = clientToken();
     // Sandbox client tokens are prefixed with "test_".
     Paddle.Environment.set(token.startsWith("test_") ? "sandbox" : "production");
-    Paddle.Initialize({
-      token,
-      eventCallback: (event: any) => {
-        if (event?.name === "checkout.completed") {
-          const txn = event?.data?.transaction_id || event?.data?.id;
-          if (txn && currentResolve) {
-            currentResolve(txn);
-            currentResolve = null;
-            currentReject = null;
-          }
-        }
-      },
-    });
+    Paddle.Initialize({ token });
     return Paddle;
   })();
   return loadPromise;
 }
 
 /**
- * Open the Paddle overlay checkout for the given email and resolve with the
- * transaction id once payment completes.
+ * Open the Paddle overlay checkout. On successful payment Paddle redirects the
+ * browser to `successUrl` (with `?_ptxn=<transaction_id>` appended), which both
+ * closes the overlay and drives the screen transition. `locale` is attached as
+ * custom data so the webhook can localize the fulfillment email.
  */
-export async function openCheckout(email: string): Promise<string> {
+export async function openCheckout(params: {
+  email: string;
+  successUrl: string;
+  locale: string;
+}): Promise<void> {
   const Paddle = await ensurePaddle();
-  return new Promise<string>((resolve, reject) => {
-    currentResolve = resolve;
-    currentReject = reject;
-    Paddle.Checkout.open({
-      items: [{ priceId: priceId(), quantity: 1 }],
-      customer: { email },
-      settings: {
-        displayMode: "overlay",
-        theme: "light",
-        allowLogout: false,
-      },
-    });
+  Paddle.Checkout.open({
+    items: [{ priceId: priceId(), quantity: 1 }],
+    customer: { email: params.email },
+    customData: { locale: params.locale },
+    settings: {
+      displayMode: "overlay",
+      theme: "light",
+      allowLogout: false,
+      successUrl: params.successUrl,
+    },
   });
 }

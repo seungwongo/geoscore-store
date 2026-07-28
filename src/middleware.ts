@@ -2,7 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { localeFromAcceptLanguage, isLocale } from "@/lib/i18n";
 
 // Known page paths (relative to a locale prefix). "" is the landing page.
-const KNOWN_PAGES = new Set(["", "privacy", "terms", "refund", "download", "admin"]);
+const KNOWN_PAGES = new Set([
+  "",
+  "privacy",
+  "terms",
+  "refund",
+  "download",
+  "admin",
+  "checkout/success",
+]);
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;

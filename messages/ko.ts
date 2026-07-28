@@ -314,6 +314,14 @@ export const ko = {
     error: "결제 확인에 실패했습니다. 결제가 되었다면 이메일을 확인하거나 잠시 후 다시 시도하세요.",
     notConfigured: "결제가 아직 설정되지 않았습니다. 관리자에게 문의하세요.",
   },
+  checkout: {
+    processing: "결제를 확인하고 있습니다…",
+    processingDesc: "잠시만 기다려 주세요. 곧 다운로드 페이지로 이동합니다.",
+    failed: "결제 확인이 지연되고 있습니다",
+    failedDesc:
+      "결제가 완료되었다면 입력하신 이메일로 다운로드 링크를 보내드렸습니다. 메일함(스팸함 포함)을 확인해 주세요. 문제가 계속되면 support@thegreat.io 로 문의해 주세요.",
+    backHome: "홈으로 돌아가기",
+  },
   download: {
     verifyEyebrow: "본인 확인",
     verifyTitle: "이메일을 입력해 다운로드",

@@ -35,7 +35,7 @@ export default function PurchaseButton({
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [status, setStatus] = useState<null | "loading" | "verifying">(null);
+  const [status, setStatus] = useState<null | "loading">(null);
 
   const busy = status !== null;
 
@@ -57,16 +57,11 @@ export default function PurchaseButton({
     const cleanEmail = email.trim();
     try {
       setStatus("loading");
-      const transactionId = await openCheckout(cleanEmail);
-      setStatus("verifying");
-      const res = await fetch("/api/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transactionId, email: cleanEmail, locale, sessionId: getSessionId() }),
-      });
-      if (!res.ok) throw new Error("verify failed");
-      const data = (await res.json()) as { id: string };
-      window.location.href = `/${locale}/download?id=${encodeURIComponent(data.id)}`;
+      // Keep the funnel session id across the Paddle redirect.
+      getSessionId();
+      const successUrl = `${window.location.origin}/${locale}/checkout/success`;
+      await openCheckout({ email: cleanEmail, successUrl, locale });
+      // Paddle now owns the screen and will redirect to successUrl on payment.
     } catch {
       setError(modal.error);
       setStatus(null);
@@ -111,11 +106,7 @@ export default function PurchaseButton({
               }}
             />
             {error && <p className="err">{error}</p>}
-            {status && (
-              <p className="status">
-                {status === "loading" ? modal.loading : modal.verifying}
-              </p>
-            )}
+            {status && <p className="status">{modal.loading}</p>}
             <div className="modal-actions">
               <button
                 type="button"

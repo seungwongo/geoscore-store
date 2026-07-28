@@ -316,6 +316,14 @@ export const en: typeof ko = {
     error: "We couldn't confirm the payment. If you were charged, check your email or try again shortly.",
     notConfigured: "Payments aren't configured yet. Please contact the administrator.",
   },
+  checkout: {
+    processing: "Confirming your payment…",
+    processingDesc: "One moment — you'll be taken to the download page shortly.",
+    failed: "Payment confirmation is taking a moment",
+    failedDesc:
+      "If your payment went through, we've emailed the download link to the address you used. Please check your inbox (and spam). If the problem persists, contact support@thegreat.io.",
+    backHome: "Back to home",
+  },
   download: {
     verifyEyebrow: "Verify",
     verifyTitle: "Enter your email to download",
