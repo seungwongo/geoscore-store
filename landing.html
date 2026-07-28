@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GeoScore — 내 페이지, AI가 인용할까?</title>
+    <meta
+      name="description"
+      content="지금 보는 웹페이지가 ChatGPT·Perplexity·Gemini에 출처로 인용될 만한지 클릭 한 번으로 채점하고, 고칠 문장까지 제안하는 GEO 진단 크롬 확장."
+    />
+    <style>
+      :root {
+        --blue: #2563eb;
+        --blue-d: #1d4ed8;
+        --ink: #0f172a;
+        --gray: #475569;
+        --line: #e5e7eb;
+        --bg: #f8fafc;
+        --ready: #16a34a;
+        --cand: #2563eb;
+        --work: #d97706;
+        --hard: #dc2626;
+        --amber-bg: #fffbeb;
+        --green-bg: #f0fdf4;
+        --red-bg: #fef2f2;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+          'Apple SD Gothic Neo', 'Noto Sans KR', Roboto, sans-serif;
+        color: var(--ink);
+        background: #fff;
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+      }
+      a { color: var(--blue); }
+      .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+      .btn {
+        display: inline-block;
+        background: var(--blue);
+        color: #fff;
+        text-decoration: none;
+        font-weight: 700;
+        padding: 12px 22px;
+        border-radius: 10px;
+        font-size: 15px;
+      }
+      .btn:hover { background: var(--blue-d); }
+      .btn.ghost { background: #fff; color: var(--blue); border: 1.5px solid var(--blue); }
+
+      /* hero */
+      header.hero {
+        background: radial-gradient(1200px 500px at 70% -10%, #eff6ff 0%, #fff 60%);
+        border-bottom: 1px solid var(--line);
+        padding: 24px 0 64px;
+      }
+      .nav { display: flex; align-items: center; justify-content: space-between; padding: 8px 0 40px; }
+      .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; }
+      .brand .mark {
+        width: 34px; height: 34px; border-radius: 9px; background: var(--blue);
+        display: grid; place-items: center; color: #fff; font-size: 18px;
+      }
+      .nav .links a { color: var(--gray); text-decoration: none; margin-left: 20px; font-size: 14px; font-weight: 600; }
+      .nav .links a:hover { color: var(--ink); }
+      .hero-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 44px; align-items: center; }
+      .eyebrow { color: var(--blue); font-weight: 800; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; }
+      h1 { font-size: 42px; line-height: 1.18; margin: 12px 0 16px; letter-spacing: -0.02em; }
+      .lead { font-size: 17px; color: var(--gray); margin-bottom: 26px; }
+      .cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+      .cta-note { font-size: 12px; color: #94a3b8; margin-top: 12px; }
+      .engines { margin-top: 26px; font-size: 13px; color: #94a3b8; }
+      .engines b { color: var(--gray); }
+
+      /* generic sections */
+      section { padding: 64px 0; }
+      section.alt { background: var(--bg); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+      .sec-head { text-align: center; max-width: 680px; margin: 0 auto 44px; }
+      .sec-head h2 { font-size: 30px; margin: 6px 0 10px; letter-spacing: -0.01em; }
+      .sec-head p { color: var(--gray); font-size: 16px; }
+
+      /* feature grid */
+      .feat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+      .card {
+        background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 24px;
+      }
+      .card .ico { font-size: 26px; }
+      .card h3 { font-size: 18px; margin: 12px 0 8px; }
+      .card p { color: var(--gray); font-size: 14.5px; margin: 0; }
+      .card ul { color: var(--gray); font-size: 14px; margin: 10px 0 0; padding-left: 18px; }
+      .card li { margin: 3px 0; }
+
+      /* rubric */
+      .rubric { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+      table.r { width: 100%; border-collapse: collapse; font-size: 14px; }
+      table.r caption { text-align: left; font-weight: 800; margin-bottom: 8px; font-size: 15px; }
+      table.r th, table.r td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); }
+      table.r th { color: #64748b; font-weight: 600; font-size: 12px; }
+      table.r td.w { text-align: right; color: #94a3b8; width: 54px; }
+      .tag { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 999px; }
+      .tag.h { background: #eff6ff; color: #1d4ed8; }
+      .tag.a { background: #f1f5f9; color: #475569; }
+
+      /* sample report */
+      .report {
+        max-width: 460px; margin: 0 auto; background: #fff; border: 1px solid var(--line);
+        border-radius: 18px; box-shadow: 0 18px 50px -20px rgba(15,23,42,0.25); overflow: hidden;
+      }
+      .report .rhead { background: #fff; border-bottom: 1px solid var(--line); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+      .report .rhead .b { display: flex; align-items: center; gap: 8px; font-weight: 800; }
+      .report .rhead .b .mark { width: 24px; height: 24px; border-radius: 6px; background: var(--blue); color: #fff; display: grid; place-items: center; font-size: 13px; }
+      .report .rbody { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+      .rcard { border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+      .rcard h4 { margin: 0 0 10px; font-size: 14px; }
+      .meta { font-size: 12px; color: #94a3b8; }
+      .gauge { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+      .badge { color: #fff; font-weight: 800; border-radius: 999px; padding: 5px 14px; font-size: 13px; }
+      .subs { display: flex; gap: 18px; font-size: 12.5px; color: #64748b; }
+      .pill { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 5px; margin: 2px 4px 2px 0; background: #eef2ff; color: #3730a3; }
+      .bar { height: 7px; background: #f1f5f9; border-radius: 4px; }
+      .bar > span { display: block; height: 7px; border-radius: 4px; background: var(--blue); }
+      .row { display: flex; justify-content: space-between; font-size: 12.5px; color: #475569; margin-bottom: 3px; }
+      .row .g { color: #cbd5e1; }
+      .li-good { background: var(--green-bg); color: #166534; }
+      .li-bad { background: var(--red-bg); color: #991b1b; }
+      .li { border-radius: 8px; padding: 6px 9px; font-size: 12.5px; margin-bottom: 5px; }
+      .cov { color: #fff; font-size: 10.5px; font-weight: 700; border-radius: 5px; padding: 1px 7px; }
+      .cep { border: 1px solid var(--line); border-radius: 10px; padding: 11px; margin-top: 8px; }
+      .before { background: var(--red-bg); color: #b91c1c; border-radius: 6px; padding: 6px 8px; font-size: 12.5px; }
+      .after { background: var(--green-bg); color: #166534; border-radius: 6px; padding: 6px 8px; font-size: 12.5px; margin-top: 5px; }
+      .needs { background: var(--amber-bg); color: #b45309; border-radius: 6px; padding: 5px 8px; font-size: 11.5px; margin-top: 6px; }
+      pre { background: #0f172a; color: #e2e8f0; border-radius: 8px; padding: 10px; overflow-x: auto; font-size: 11.5px; margin: 6px 0 0; }
+      .acc { border-bottom: 1px solid #f1f5f9; padding: 8px 0; font-size: 12.5px; }
+      .acc .t { display: flex; justify-content: space-between; font-weight: 600; }
+      .acc .why { color: #475569; margin-top: 4px; }
+      .acc .ev { color: #94a3b8; }
+
+      /* steps */
+      .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; counter-reset: s; }
+      .step { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 22px; }
+      .step .n { width: 30px; height: 30px; border-radius: 8px; background: #eff6ff; color: var(--blue); font-weight: 800; display: grid; place-items: center; margin-bottom: 10px; }
+      .step h4 { margin: 0 0 6px; font-size: 16px; }
+      .step p { color: var(--gray); font-size: 14px; margin: 0; }
+
+      /* privacy */
+      .priv { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 32px; align-items: center; }
+      .priv ul { padding-left: 18px; color: var(--gray); }
+      .priv li { margin: 8px 0; }
+      .keycap { font-family: ui-monospace, Menlo, monospace; background: #f1f5f9; border-radius: 5px; padding: 1px 6px; font-size: 13px; }
+
+      footer.site { background: var(--ink); color: #cbd5e1; padding: 40px 0; font-size: 14px; }
+      footer.site a { color: #93c5fd; text-decoration: none; }
+      .disc { color: #94a3b8; font-size: 12.5px; margin-top: 10px; }
+
+      @media (max-width: 820px) {
+        .hero-grid, .priv { grid-template-columns: 1fr; }
+        .feat-grid, .rubric, .steps { grid-template-columns: 1fr; }
+        h1 { font-size: 32px; }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- HERO -->
+    <header class="hero">
+      <div class="wrap">
+        <nav class="nav">
+          <div class="brand"><span class="mark">◔</span> GeoScore</div>
+          <div class="links">
+            <a href="#features">기능</a>
+            <a href="#rubric">채점 기준</a>
+            <a href="#report">리포트 예시</a>
+            <a href="#privacy">프라이버시</a>
+          </div>
+        </nav>
+        <div class="hero-grid">
+          <div>
+            <p class="eyebrow">Generative Engine Optimization</p>
+            <h1>내 페이지, AI가 인용할까?<br />클릭 한 번으로 채점</h1>
+            <p class="lead">
+              지금 보고 있는 웹페이지가 생성형 답변 엔진에 <b>출처로 인용될
+              만한가</b>를 채점하는 GEO 진단 크롬 확장. 점수만 주는 게 아니라
+              <b>어떤 문장을 어떻게 바꾸면 좋을지</b>까지 제안합니다.
+            </p>
+            <div class="cta-row">
+              <a class="btn" href="#report">진단 리포트 예시 보기</a>
+              <a class="btn ghost" href="#features">기능 살펴보기</a>
+            </div>
+            <p class="cta-note">Chrome Manifest V3 · 서버 없음 · 본인 API 키(BYOK)</p>
+            <p class="engines">
+              대응 엔진: <b>ChatGPT · Perplexity · Gemini · Google AI Overviews</b>
+            </p>
+          </div>
+
+          <!-- mini score preview -->
+          <div class="report" style="max-width: 360px">
+            <div class="rhead">
+              <div class="b"><span class="mark">◔</span> GeoScore</div>
+              <span class="meta">데모</span>
+            </div>
+            <div class="rbody">
+              <div class="rcard gauge">
+                <svg width="128" height="128" viewBox="0 0 128 128">
+                  <circle cx="64" cy="64" r="52" fill="none" stroke="#e5e7eb" stroke-width="12" />
+                  <circle cx="64" cy="64" r="52" fill="none" stroke="#d97706" stroke-width="12"
+                    stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="137.2"
+                    transform="rotate(-90 64 64)" />
+                  <text x="64" y="60" text-anchor="middle" font-size="30" font-weight="800" fill="#0f172a">58</text>
+                  <text x="64" y="80" text-anchor="middle" font-size="11" fill="#94a3b8">/ 100</text>
+                </svg>
+                <span class="badge" style="background: #d97706">보강 필요</span>
+                <div class="subs"><span>콘텐츠 61/100</span><span>기술 52/100</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- WHY -->
+    <section>
+      <div class="wrap">
+        <div class="sec-head">
+          <p class="eyebrow">왜 GEO인가</p>
+          <h2>검색의 규칙이 바뀌었습니다</h2>
+          <p>
+            사용자는 링크 10개 대신 <b>합성된 답 하나</b>를 받습니다. 그 답은
+            두세 개에서 일고여덟 개 도메인만 출처로 인용하죠. 상위 10위에 드는
+            것과, 그 좁은 인용 자리에 드는 것은 <b>다른 게임</b>입니다. 기존 SEO
+            도구는 키워드·백링크를 보지만, AI가 인용을 결정하는 축은 보지
+            않습니다. GeoScore는 바로 그 축을 채점합니다.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features" class="alt">
+      <div class="wrap">
+        <div class="sec-head">
+          <p class="eyebrow">기능</p>
+          <h2>진단으로 끝내지 않습니다</h2>
+          <p>점수 → 근거 → 고칠 문장까지. 콘텐츠 담당자·마케터·1인 사업자를 위한 실전 도구.</p>
+        </div>
+        <div class="feat-grid">
+          <div class="card">
+            <div class="ico">📊</div>
+            <h3>GEO Readiness Score & 스코어카드</h3>
+            <p>
+              0~100 종합 점수와 판정 라벨을 한눈에. 항목별 가중치 막대와
+              인용될·안 될 이유 Top 3까지 정리합니다.
+            </p>
+            <ul>
+              <li>라벨: 인용 준비됨 · 인용 후보 · 보강 필요 · 인용 어려움</li>
+              <li>콘텐츠 소점수 × 0.7 + 기술 소점수 × 0.3</li>
+              <li>미채점 항목은 분모에서 제외해 비례 환산</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="ico">🧩</div>
+            <h3>하이브리드 채점 (키 없이도 동작)</h3>
+            <p>
+              콘텐츠 10개 + 기술 5개 항목을 채점합니다. 로컬 휴리스틱(정규식·DOM
+              분석)으로 API 키 없이도 11개 항목이 즉시 나옵니다.
+            </p>
+            <ul>
+              <li>휴리스틱: 통계 밀도·출처·인용구·질문 커버리지·최신성·저자 권위 + 기술 5개</li>
+              <li>BYOK: 본인 LLM 키를 넣으면 정성 항목 4개 + 문장 재작성이 채워짐</li>
+              <li>오프라인·API 오류에도 리포트는 항상 완성</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="ico">✍️</div>
+            <h3>CEP(상황 진입점) 맥락 진단</h3>
+            <p>
+              사용자가 AI에 실제로 던질 상황(누가·언제·왜·경험·제약·기준)을 이
+              페이지 기준으로 6~8개 도출하고, 각 상황 대응도를 평가합니다.
+            </p>
+            <ul>
+              <li>대응도: 충분 · 부분 · 미대응</li>
+              <li>'제품 중심 → 상황 중심' Before → After 문장 재작성</li>
+              <li>각 상황에 필요한 검증 가능한 근거(수치·출처) 안내</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="ico">🛠️</div>
+            <h3>기술 진단 & 복붙 처방</h3>
+            <p>
+              AI 크롤러 차단(robots.txt)·SSR 렌더링·구조화 데이터(JSON-LD)·llms.txt를
+              점검하고, 바로 붙여넣을 스니펫을 만들어 줍니다.
+            </p>
+            <ul>
+              <li>GPTBot·ClaudeBot·PerplexityBot 등 7종 크롤러 접근성 판정</li>
+              <li>robots · JSON-LD · llms.txt 처방 스니펫</li>
+              <li>복붙용 '인용 준비된 도입부 블록'</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="ico">📤</div>
+            <h3>리포트 출력 & 히스토리</h3>
+            <p>
+              진단 리포트를 마크다운·HTML·DOCX로 내보내고, 최근 진단을 저장해
+              재방문 시 점수 변화를 델타로 비교합니다.
+            </p>
+            <ul>
+              <li>마크다운 복사 / .md · .html · .docx 다운로드</li>
+              <li>같은 URL 재진단 시 이전 대비 ± 점수 표시</li>
+              <li>한국어 · 영어 인터페이스 자동(브라우저 언어 기준)</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="ico">🤖</div>
+            <h3>다중 LLM 제공자 (BYOK)</h3>
+            <p>
+              Anthropic(Claude) · OpenAI(GPT) · Google(Gemini) 중 원하는 제공자를
+              골라 본인 키로 정밀 진단을 실행합니다.
+            </p>
+            <ul>
+              <li>설정에서 제공자 드롭다운 + 단일 키/모델</li>
+              <li>LLM 호출 1회로 정성 채점 + 재작성 동시 처리</li>
+              <li>키·모델은 설정에서 언제든 변경</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RUBRIC -->
+    <section id="rubric">
+      <div class="wrap">
+        <div class="sec-head">
+          <p class="eyebrow">채점 기준</p>
+          <h2>검증된 15개 항목 루브릭</h2>
+          <p>GEO 연구(프린스턴 외, KDD 2024)와 실무 합의로 정리된 레버를 그대로 채점합니다. 감이 아니라 항목·가중치로.</p>
+        </div>
+        <div class="rubric">
+          <table class="r">
+            <caption>콘텐츠 A1~A10 (합 100)</caption>
+            <tr><th>항목</th><th>채점</th><th class="w">가중치</th></tr>
+            <tr><td>A1 답변 우선 구조</td><td><span class="tag h">LLM</span></td><td class="w">15</td></tr>
+            <tr><td>A2 사실 밀도·통계</td><td><span class="tag a">휴리스틱</span></td><td class="w">15</td></tr>
+            <tr><td>A3 출처 인용</td><td><span class="tag a">휴리스틱</span></td><td class="w">12</td></tr>
+            <tr><td>A4 전문가 인용구</td><td><span class="tag a">휴리스틱</span></td><td class="w">10</td></tr>
+            <tr><td>A5 추출 가능성·청크화</td><td><span class="tag h">LLM</span></td><td class="w">14</td></tr>
+            <tr><td>A6 질문 커버리지</td><td><span class="tag a">휴리스틱</span></td><td class="w">9</td></tr>
+            <tr><td>A7 가독성·명료성</td><td><span class="tag h">LLM</span></td><td class="w">8</td></tr>
+            <tr><td>A8 최신성 신호</td><td><span class="tag a">휴리스틱</span></td><td class="w">6</td></tr>
+            <tr><td>A9 개체·브랜드 명확성</td><td><span class="tag h">LLM</span></td><td class="w">6</td></tr>
+            <tr><td>A10 저자 권위 (E-E-A-T)</td><td><span class="tag a">휴리스틱</span></td><td class="w">5</td></tr>
+          </table>
+          <table class="r">
+            <caption>기술 B1~B5 (합 100 · 전부 휴리스틱)</caption>
+            <tr><th>항목</th><th>설명</th><th class="w">가중치</th></tr>
+            <tr><td>B1 AI 크롤러 접근성</td><td class="meta">robots.txt 게이트</td><td class="w">35</td></tr>
+            <tr><td>B2 렌더링(SSR)</td><td class="meta">raw HTML vs DOM</td><td class="w">20</td></tr>
+            <tr><td>B3 구조화 데이터</td><td class="meta">JSON-LD 직독</td><td class="w">20</td></tr>
+            <tr><td>B4 llms.txt</td><td class="meta">존재 여부</td><td class="w">10</td></tr>
+            <tr><td>B5 기술 위생</td><td class="meta">날짜·정합</td><td class="w">15</td></tr>
+            <tr><td colspan="3" style="border:0; padding-top:14px;" class="meta">
+              감점(콘텐츠 소점수 차감, 최대 −15): 키워드 스터핑 −7 · 패딩 −4 · 답변 감금 −4
+            </td></tr>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SAMPLE REPORT -->
+    <section id="report" class="alt">
+      <div class="wrap">
+        <div class="sec-head">
+          <p class="eyebrow">리포트 예시</p>
+          <h2>실제 진단 리포트</h2>
+          <p>예시 페이지 — 콜드브루 원두 제품 소개, 타깃 쿼리 "야근할 때 집중 잘 되는 커피"</p>
+        </div>
+
+        <div class="report">
+          <div class="rhead">
+            <div class="b"><span class="mark">◔</span> GeoScore</div>
+            <span class="meta">example-coffee.com/coldbrew</span>
+          </div>
+          <div class="rbody">
+            <!-- §0 score -->
+            <div class="rcard gauge">
+              <svg width="130" height="130" viewBox="0 0 130 130">
+                <circle cx="65" cy="65" r="52" fill="none" stroke="#e5e7eb" stroke-width="12" />
+                <circle cx="65" cy="65" r="52" fill="none" stroke="#d97706" stroke-width="12"
+                  stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="137.2"
+                  transform="rotate(-90 65 65)" />
+                <text x="65" y="61" text-anchor="middle" font-size="30" font-weight="800" fill="#0f172a">58</text>
+                <text x="65" y="81" text-anchor="middle" font-size="11" fill="#94a3b8">/ 100</text>
+              </svg>
+              <span class="badge" style="background: #d97706">보강 필요</span>
+              <div class="subs"><span>콘텐츠 61/100</span><span>기술 52/100</span></div>
+              <span class="meta">하이브리드(휴리스틱 + AI) · 타깃: 야근할 때 집중 잘 되는 커피</span>
+            </div>
+
+            <!-- §2 reasons -->
+            <div class="rcard">
+              <h4>인용할 이유 / 안 될 이유</h4>
+              <div class="li li-good">✅ 사실 밀도·통계 (4/5) — "카페인 함량 12mg/100ml, 산미 3.5"</div>
+              <div class="li li-good">✅ 렌더링(SSR) (5/5) — 본문이 서버에서 렌더되어 크롤러가 읽기 쉬움</div>
+              <div class="li li-good">✅ 최신성 신호 (4/5) — dateModified 2026-05</div>
+              <div class="li li-bad">❌ 구조화 데이터(JSON-LD) (0/5) — Product/Article 스키마 없음</div>
+              <div class="li li-bad">❌ 답변 우선 구조 (2/5) — 첫 200단어가 브랜드 스토리로 시작</div>
+              <div class="li li-bad">❌ llms.txt (0/5) — 없음</div>
+            </div>
+
+            <!-- §1 scorecard -->
+            <div class="rcard">
+              <h4>스코어카드</h4>
+              <div class="row"><span>B1 AI 크롤러 접근성 <span class="g">·35</span></span><span>4/5</span></div>
+              <div class="bar"><span style="width:80%"></span></div>
+              <div class="row" style="margin-top:8px"><span>B3 구조화 데이터 <span class="g">·20</span></span><span>0/5</span></div>
+              <div class="bar"><span style="width:0%; background:#dc2626"></span></div>
+              <div class="row" style="margin-top:8px"><span>A1 답변 우선 구조 <span class="g">·15</span></span><span>2/5</span></div>
+              <div class="bar"><span style="width:40%; background:#d97706"></span></div>
+              <div class="row" style="margin-top:8px"><span>A2 사실 밀도·통계 <span class="g">·15</span></span><span>4/5</span></div>
+              <div class="bar"><span style="width:80%"></span></div>
+              <div class="row" style="margin-top:8px"><span>A5 추출 가능성·청크화 <span class="g">·14</span></span><span>3/5</span></div>
+              <div class="bar"><span style="width:60%"></span></div>
+              <p class="meta" style="margin:8px 0 0">… 외 A3·A4·A6~A10 · B2·B4·B5 (총 15항목)</p>
+            </div>
+
+            <!-- §3 item accordion -->
+            <div class="rcard">
+              <h4>항목별 진단</h4>
+              <div class="acc">
+                <div class="t"><span>A1 답변 우선 구조</span><span class="meta">2/5</span></div>
+                <div class="why"><b>왜:</b> 첫 200단어가 주 질문에 직답해야 인용된다.</div>
+                <div class="ev">근거: "1998년, 작은 로스터리에서 시작한 우리의 이야기는…"</div>
+              </div>
+              <div class="acc">
+                <div class="t"><span>B3 구조화 데이터(JSON-LD)</span><span class="meta">0/5</span></div>
+                <div class="why"><b>왜:</b> 구조화 데이터가 개체·맥락을 기계에 전달한다.</div>
+                <div class="ev">근거: JSON-LD 구조화 데이터 없음 (DOM 직독 확인)</div>
+              </div>
+              <div class="acc">
+                <div class="t"><span>A2 사실 밀도·통계</span><span class="meta">4/5</span></div>
+                <div class="why"><b>왜:</b> 통계·사실 밀도가 가장 큰 레버.</div>
+                <div class="ev">근거: 카페인 12mg/100ml · 산미 3.5 · 250g</div>
+              </div>
+            </div>
+
+            <!-- CEP -->
+            <div class="rcard">
+              <h4>CEP 진단 — 상황 진입점</h4>
+              <p class="meta" style="margin:-4px 0 8px">
+                <span class="cov" style="background:#dc2626">미대응 2</span>
+                <span class="cov" style="background:#d97706">부분 1</span>
+                <span class="cov" style="background:#16a34a">충분 1</span>
+              </p>
+
+              <div class="cep">
+                <div><span class="cov" style="background:#dc2626">미대응</span> <b>야근 중 집중력을 유지하려 할 때</b></div>
+                <div style="margin:5px 0"><span class="pill">언제: 야근</span><span class="pill">왜: 집중</span><span class="pill">기준: 카페인·간편함</span></div>
+                <div class="meta"><b>예상 질문:</b> 밤샘 작업할 때 집중 잘 되는 커피 추천해줘</div>
+                <div class="meta"><b>부족한 점:</b> 제품 스펙만 있고 '야근/집중' 상황 언어가 없음</div>
+                <div class="before"><b>Before</b> 고농도 아라비카 원두를 사용합니다.</div>
+                <div class="after"><b>After</b> 야근처럼 집중이 필요한 순간을 위해 100ml당 카페인 [수치 삽입]mg을 담았습니다.</div>
+                <div class="needs">필요 근거: 카페인 함량 수치 + 성분표/시험성적서 출처</div>
+              </div>
+
+              <div class="cep">
+                <div><span class="cov" style="background:#d97706">부분</span> <b>손님과 편하게 대화할 커피가 필요할 때</b></div>
+                <div style="margin:5px 0"><span class="pill">누구: 손님</span><span class="pill">경험: 부담 없는 대화</span></div>
+                <div class="meta"><b>예상 질문:</b> 집들이 때 손님 대접용으로 무난한 원두 뭐가 좋아?</div>
+                <div class="meta"><b>부족한 점:</b> 맛 프로필은 있으나 '대접·부담 없음' 맥락 부재</div>
+                <div class="before"><b>Before</b> 균형 잡힌 바디감의 미디엄 로스트.</div>
+                <div class="after"><b>After</b> 취향을 안 타는 미디엄 로스트라, 손님 대접처럼 실패하면 안 되는 자리에 무난합니다.</div>
+                <div class="needs">필요 근거: 로스팅 레벨 · 대중 선호 근거(리뷰·평점)</div>
+              </div>
+
+              <p class="meta" style="margin-top:8px">CEP의 필요 근거는 A2(통계)·A3(출처) 점수를 올리는 실제 방법입니다.</p>
+            </div>
+
+            <!-- tech prescription -->
+            <div class="rcard">
+              <h4>기술 처방 스니펫</h4>
+              <div class="meta">jsonld</div>
+              <pre>&lt;script type="application/ld+json"&gt;
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "콜드브루 원두 250g",
+  "author": { "@type": "Person", "name": "[저자 이름]" },
+  "datePublished": "2026-05-10",
+  "dateModified": "2026-05-10"
+}
+&lt;/script&gt;</pre>
+            </div>
+
+            <div class="rcard">
+              <h4>인용 준비된 도입부 블록</h4>
+              <pre>야근할 때 집중 잘 되는 커피의 핵심은 [핵심 답변]입니다.
+[수치 삽입]에 따르면 [근거]이며, 이는 [함의]를 뜻합니다.</pre>
+            </div>
+          </div>
+        </div>
+        <p class="meta" style="text-align:center; max-width:620px; margin:22px auto 0">
+          ※ 위 리포트는 기능 설명용 예시입니다. 실제 점수·근거·CEP·재작성은 진단하는 페이지와 선택한 LLM에 따라 달라집니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- HOW -->
+    <section>
+      <div class="wrap">
+        <div class="sec-head">
+          <p class="eyebrow">사용 방법</p>
+          <h2>세 번의 클릭</h2>
+        </div>
+        <div class="steps">
+          <div class="step">
+            <div class="n">1</div>
+            <h4>페이지 열고 아이콘 클릭</h4>
+            <p>진단할 페이지에서 GeoScore 아이콘을 누르면 사이드 패널이 열립니다.</p>
+          </div>
+          <div class="step">
+            <div class="n">2</div>
+            <h4>타깃 쿼리 입력 (선택)</h4>
+            <p>"어떤 질문의 답으로 인용되길 원하나요?" 비워두면 자동으로 추론합니다.</p>
+          </div>
+          <div class="step">
+            <div class="n">3</div>
+            <h4>진단 실행</h4>
+            <p>점수·스코어카드·CEP·처방이 담긴 리포트가 나옵니다. 정성 항목은 설정에서 API 키 입력 시 채워집니다.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRIVACY -->
+    <section id="privacy" class="alt">
+      <div class="wrap priv">
+        <div>
+          <p class="eyebrow">프라이버시</p>
+          <h2 style="font-size:30px; margin:6px 0 14px">본문은 당신이 고른 곳에만 갑니다</h2>
+          <ul>
+            <li><b>자체 서버가 없습니다.</b> 백엔드·DB·계정·애널리틱스·텔레메트리 없음.</li>
+            <li>페이지 본문은 <b>사용자가 선택한 LLM 제공자(택1)</b>에게 <b>본인 API 키</b>로만, 진단 실행 시에만 전송됩니다.</li>
+            <li>API 키와 진단 기록은 브라우저 로컬(<span class="keycap">chrome.storage.local</span>)에만 저장됩니다.</li>
+            <li>선택한 제공자 외 <b>제3자에게 데이터를 판매·공유하지 않습니다.</b></li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="ico">🔒</div>
+          <h3>허용 네트워크 대상은 딱 필요한 곳만</h3>
+          <p>
+            진단 대상 도메인(robots.txt·llms.txt·raw HTML)과, 사용자가 고른 LLM
+            제공자 1곳:
+          </p>
+          <ul>
+            <li>api.anthropic.com</li>
+            <li>api.openai.com</li>
+            <li>generativelanguage.googleapis.com</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section style="text-align:center">
+      <div class="wrap">
+        <h2 style="font-size:30px; margin:0 0 10px">지금 이 페이지, AI가 인용할까요?</h2>
+        <p style="color:var(--gray); font-size:16px; margin:0 0 24px">클릭 한 번으로 확인하고, 고칠 문장까지 받아가세요.</p>
+        <a class="btn" href="#report">진단 리포트 예시 다시 보기</a>
+        <p class="disc" style="max-width:640px; margin:22px auto 0">
+          GeoScore 점수는 인용 가능성의 <b>방향성 지표</b>이며 특정 인용률이나
+          순위를 보장하지 않습니다. GEO 기준은 빠르게 변하므로 최신 기준을
+          주기적으로 재확인하세요.
+        </p>
+      </div>
+    </section>
+
+    <footer class="site">
+      <div class="wrap">
+        <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; align-items:center">
+          <div><b style="color:#fff">GeoScore</b> · GEO 진단 크롬 확장 (v0.1.0)</div>
+          <div>© 2026 <a href="https://seungwongo.pro">SEUNGWONGO.PRO</a> · All rights reserved</div>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
