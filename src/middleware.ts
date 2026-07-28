@@ -1,19 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import { locales, localeFromAcceptLanguage } from "@/lib/i18n";
+import { localeFromAcceptLanguage, isLocale } from "@/lib/i18n";
+
+// Known page paths (relative to a locale prefix). "" is the landing page.
+const KNOWN_PAGES = new Set(["", "privacy", "terms", "refund", "download"]);
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const segments = pathname.split("/").filter(Boolean); // "/en/privacy" -> ["en","privacy"]
+  const first = segments[0];
+  const hasLocale = isLocale(first);
 
-  // Already has a locale prefix → let it through.
-  const hasLocale = locales.some(
-    (l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`),
-  );
-  if (hasLocale) return NextResponse.next();
+  const locale = hasLocale
+    ? first
+    : localeFromAcceptLanguage(req.headers.get("accept-language"));
 
-  // Redirect the root (and any unprefixed path) to the browser-preferred locale.
-  const locale = localeFromAcceptLanguage(req.headers.get("accept-language"));
+  // The page path without the locale prefix, e.g. "privacy" or "" for home.
+  const innerPath = (hasLocale ? segments.slice(1) : segments).join("/");
+  const known = KNOWN_PAGES.has(innerPath);
+
+  // Correctly locale-prefixed and a real page → let it through.
+  if (hasLocale && known) return NextResponse.next();
+
   const url = req.nextUrl.clone();
-  url.pathname = `/${locale}${pathname === "/" ? "" : pathname}`;
+  if (known) {
+    // Unprefixed but valid page (e.g. "/privacy") → add the locale prefix.
+    url.pathname = `/${locale}${pathname === "/" ? "" : pathname}`;
+  } else {
+    // Unknown path (e.g. "/jp", "/en/nope") → send to the locale home.
+    url.pathname = `/${locale}`;
+    url.search = "";
+  }
   return NextResponse.redirect(url);
 }
 
