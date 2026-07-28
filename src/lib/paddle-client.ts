@@ -94,13 +94,16 @@ export async function openCheckout(params: {
   email: string;
   successUrl: string;
   locale: string;
+  sessionId?: string;
 }): Promise<void> {
   const Paddle = await ensurePaddle();
   pendingSuccessUrl = params.successUrl;
   Paddle.Checkout.open({
     items: [{ priceId: priceId(), quantity: 1 }],
     customer: { email: params.email },
-    customData: { locale: params.locale },
+    // Carried into the transaction so the webhook can attribute the purchase
+    // to the browser session (funnel analytics) and localize the email.
+    customData: { locale: params.locale, sessionId: params.sessionId ?? "" },
     settings: {
       displayMode: "overlay",
       theme: "light",

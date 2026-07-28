@@ -41,7 +41,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid_signature" }, { status: 401 });
   }
 
-  let event: { event_type?: string; data?: { id?: string; custom_data?: { locale?: string } } };
+  let event: {
+    event_type?: string;
+    data?: { id?: string; custom_data?: { locale?: string; sessionId?: string } };
+  };
   try {
     event = JSON.parse(raw);
   } catch {
@@ -50,11 +53,13 @@ export async function POST(req: NextRequest) {
 
   if (event.event_type && PAID_EVENTS.has(event.event_type) && event.data?.id) {
     try {
-      // Backup fulfillment path (the client success page usually wins). Locale
-      // is unknown here, so fulfill falls back to the default locale.
+      // Locale + session id ride along in the transaction's custom_data, so the
+      // webhook attributes the purchase to the browser session for funnel
+      // analytics and localizes the email — same result as the client path.
       await fulfillPurchase({
         transactionId: event.data.id,
         locale: event.data.custom_data?.locale ?? null,
+        sessionId: event.data.custom_data?.sessionId || null,
       });
     } catch (err) {
       console.error("[webhook] fulfill failed:", err);

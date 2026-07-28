@@ -57,10 +57,8 @@ export default function PurchaseButton({
     const cleanEmail = email.trim();
     try {
       setStatus("loading");
-      // Keep the funnel session id across the Paddle redirect.
-      getSessionId();
       const successUrl = `${window.location.origin}/${locale}/checkout/success`;
-      await openCheckout({ email: cleanEmail, successUrl, locale });
+      await openCheckout({ email: cleanEmail, successUrl, locale, sessionId: getSessionId() });
       // Paddle now owns the screen and will redirect to successUrl on payment.
     } catch {
       setError(modal.error);
