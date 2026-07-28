@@ -43,6 +43,9 @@ function loadScript(): Promise<void> {
   });
 }
 
+// Where to send the browser once the current checkout completes.
+let pendingSuccessUrl: string | null = null;
+
 async function ensurePaddle(): Promise<any> {
   if (loadPromise) return loadPromise;
   loadPromise = (async () => {
@@ -51,17 +54,30 @@ async function ensurePaddle(): Promise<any> {
     const token = clientToken();
     // Sandbox client tokens are prefixed with "test_".
     Paddle.Environment.set(token.startsWith("test_") ? "sandbox" : "production");
-    Paddle.Initialize({ token });
+    Paddle.Initialize({
+      token,
+      // Drive the on-screen transition ourselves instead of relying only on
+      // Paddle's successUrl redirect (which can be inconsistent for overlays).
+      eventCallback: (event: any) => {
+        if (event?.name === "checkout.completed" && pendingSuccessUrl) {
+          const txn = event?.data?.transaction_id || event?.data?.id;
+          const dest = txn
+            ? `${pendingSuccessUrl}?_ptxn=${encodeURIComponent(txn)}`
+            : pendingSuccessUrl;
+          window.location.assign(dest);
+        }
+      },
+    });
     return Paddle;
   })();
   return loadPromise;
 }
 
 /**
- * Open the Paddle overlay checkout. On successful payment Paddle redirects the
- * browser to `successUrl` (with `?_ptxn=<transaction_id>` appended), which both
- * closes the overlay and drives the screen transition. `locale` is attached as
- * custom data so the webhook can localize the fulfillment email.
+ * Open the Paddle overlay checkout. On successful payment we redirect the
+ * browser to `successUrl?_ptxn=<transaction_id>` from the checkout.completed
+ * event (with Paddle's own successUrl redirect as a backup). `locale` is passed
+ * as custom data so the webhook can localize the fulfillment email.
  */
 export async function openCheckout(params: {
   email: string;
@@ -69,6 +85,7 @@ export async function openCheckout(params: {
   locale: string;
 }): Promise<void> {
   const Paddle = await ensurePaddle();
+  pendingSuccessUrl = params.successUrl;
   Paddle.Checkout.open({
     items: [{ priceId: priceId(), quantity: 1 }],
     customer: { email: params.email },
