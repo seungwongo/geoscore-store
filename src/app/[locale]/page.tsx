@@ -2,6 +2,7 @@ import { getDictionary, isLocale, defaultLocale, type Locale } from "@/lib/i18n"
 import PurchaseButton from "@/components/PurchaseButton";
 import Footer from "@/components/Footer";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
+import HeroSlider from "@/components/HeroSlider";
 
 export const dynamic = "force-dynamic";
 
@@ -41,8 +42,53 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
   const locale: Locale = isLocale(params.locale) ? params.locale : defaultLocale;
   const t = getDictionary(locale);
 
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/$/, "");
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        name: "GeoScore",
+        applicationCategory: "BusinessApplication",
+        operatingSystem: "Chrome",
+        url: `${appUrl}/${locale}`,
+        image: `${appUrl}/geoscore-store.png`,
+        description: t.meta.description,
+        softwareVersion: "0.1.0",
+        inLanguage: locale,
+        offers: {
+          "@type": "Offer",
+          price: "19",
+          priceCurrency: "USD",
+          availability: "https://schema.org/InStock",
+          url: `${appUrl}/${locale}#buy`,
+        },
+        publisher: {
+          "@type": "Organization",
+          name: "SEUNGWONGO.PRO",
+          url: "https://seungwongo.pro",
+        },
+      },
+      {
+        "@type": "WebSite",
+        name: "GeoScore",
+        url: appUrl,
+        inLanguage: locale,
+        publisher: {
+          "@type": "Organization",
+          name: "SEUNGWONGO.PRO",
+          url: "https://seungwongo.pro",
+        },
+      },
+    ],
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <AnalyticsTracker locale={locale} />
       {/* HERO */}
       <header className="hero">
@@ -63,12 +109,7 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
           <div className="hero-grid">
             <div>
               <p className="eyebrow">{t.hero.eyebrow}</p>
-              <h1>
-                {t.hero.h1_line1}
-                <br />
-                {t.hero.h1_line2}
-              </h1>
-              <Html className="lead" html={t.hero.lead} />
+              <HeroSlider slides={t.hero.slides} />
               <div className="cta-row">
                 <PurchaseButton locale={locale} label={t.hero.ctaBuy} modal={t.modal} />
                 <a className="btn ghost" href="#report">
@@ -81,7 +122,7 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
               </p>
             </div>
 
-            <div className="report" style={{ maxWidth: 360 }}>
+            <div className="report hero-report" style={{ maxWidth: 424 }}>
               <div className="rhead">
                 <div className="b">
                   <span className="mark">◔</span> GeoScore
@@ -90,7 +131,7 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
               </div>
               <div className="rbody">
                 <div className="rcard gauge">
-                  <Gauge size={128} />
+                  <Gauge size={156} />
                   <span className="badge" style={{ background: "#d97706" }}>
                     {t.hero.demoBadge}
                   </span>

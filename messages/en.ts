@@ -40,9 +40,28 @@ export const en: typeof ko = {
   },
   hero: {
     eyebrow: "Generative Engine Optimization",
-    h1_line1: "Will AI cite your page?",
-    h1_line2: "Score it in one click",
-    lead: "A GEO diagnostic Chrome extension that scores <b>whether the page you're viewing is worth citing</b> by generative answer engines. It doesn't just give a number — it tells you <b>which sentences to change and how</b>.",
+    slides: [
+      {
+        line1: "If AI won't recommend you,",
+        line2: "customers can't find you",
+        lead: "People now ask <b>AI, not a search box.</b> If you're not cited in the answer, your business loses its very chance to be seen.",
+      },
+      {
+        line1: "The era of finding you by",
+        line2: "keyword search is ending",
+        lead: "Customers ask AI and arrive through the <b>sources and recommendations it cites.</b> You need that narrow citation slot to get traffic.",
+      },
+      {
+        line1: "Your odds of being found by AI",
+        line2: "are your revenue",
+        lead: "The more AI names you as a source, the more trust and traffic you get. <b>Raising your discoverability</b> is the growth strategy of the AI era.",
+      },
+      {
+        line1: "Will AI cite your page?",
+        line2: "Score it in one click",
+        lead: "GeoScore scores <b>whether your page is worth citing</b> by AI — and tells you <b>what to change and how</b> to raise the odds.",
+      },
+    ],
     ctaBuy: "Buy now · $19",
     ctaReport: "See a sample report",
     ctaNote: "Chrome Manifest V3 · No server · Bring your own API key (BYOK)",

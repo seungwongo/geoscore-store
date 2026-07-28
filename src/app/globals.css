@@ -261,3 +261,32 @@ footer.site a { color: #93c5fd; text-decoration: none; }
 .geo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .geo-closing { max-width: 760px; margin: 32px auto 0; text-align: center; font-size: 17px; font-weight: 600; color: var(--ink); line-height: 1.6; }
 @media (max-width: 820px) { .geo-grid { grid-template-columns: 1fr; } }
+
+/* hero message slider */
+.hero-slider { margin: 12px 0 26px; }
+.hero-dots { display: flex; gap: 8px; margin-bottom: 16px; }
+.hero-dot { width: 8px; height: 8px; padding: 0; border: none; border-radius: 999px; background: #cbd5e1; cursor: pointer; transition: background 0.3s, width 0.3s; }
+.hero-dot:hover { background: #94a3b8; }
+.hero-dot.active { background: var(--blue); width: 22px; }
+.hero-slide { min-height: 208px; animation: heroSlideIn 0.5s ease; }
+.hero-slide h1 { margin-top: 0; }
+.hero-slide .lead { margin-bottom: 0; }
+@keyframes heroSlideIn {
+  from { opacity: 0; transform: translateX(26px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide { animation: none; }
+}
+@media (max-width: 820px) {
+  .hero-slide { min-height: 176px; }
+}
+
+/* enlarged hero score box */
+.hero-report .rhead { padding: 14px 18px; }
+.hero-report .rhead .b { font-size: 16px; }
+.hero-report .rhead .b .mark { width: 28px; height: 28px; font-size: 15px; }
+.hero-report .rbody { padding: 20px; }
+.hero-report .rcard.gauge { padding: 20px; gap: 10px; }
+.hero-report .badge { font-size: 15px; padding: 7px 18px; }
+.hero-report .subs { font-size: 14px; gap: 22px; }
