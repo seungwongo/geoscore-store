@@ -7,12 +7,36 @@ export const en: typeof ko = {
       "A GEO diagnostic Chrome extension that scores, in one click, whether the page you're viewing is worth citing by ChatGPT, Perplexity and Gemini — and suggests the exact sentences to fix.",
   },
   nav: {
+    geo: "What is GEO?",
     features: "Features",
     rubric: "Rubric",
     report: "Sample report",
     privacy: "Privacy",
     install: "Install",
     buy: "Buy",
+  },
+  geo: {
+    eyebrow: "What is GEO?",
+    h2: "It's no longer about ranking — it's about being cited in the AI's answer",
+    lead: "<b>GEO (Generative Engine Optimization)</b> means optimizing your page so AI engines like ChatGPT, Perplexity and Gemini <b>cite it as a trusted source</b> when they answer. People increasingly ask AI instead of a search box, and <b>a brand the AI never mentions is effectively invisible.</b>",
+    cards: [
+      {
+        ico: "🔎",
+        h3: "From search to the AI's answer",
+        p: "Users get one synthesized answer instead of ten links. If you aren't cited in it, you lose the traffic, leads and revenue that used to come with it.",
+      },
+      {
+        ico: "🤝",
+        h3: "A citation is trust — and sales",
+        p: "When the AI names you as a source, prospects already treat you as a vetted choice. It's a recommendation more powerful than any ad.",
+      },
+      {
+        ico: "🚀",
+        h3: "A first-mover window",
+        p: "Most sites still don't know what AI citation depends on. Whoever optimizes first takes the narrow citation slot in AI answers.",
+      },
+    ],
+    closing: "In the AI era, discoverability is survival. GeoScore turns that probability into a score — and tells you exactly what to fix to raise it.",
   },
   hero: {
     eyebrow: "Generative Engine Optimization",

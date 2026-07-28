@@ -52,6 +52,7 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
               <span className="mark">◔</span> GeoScore
             </div>
             <div className="links">
+              <a href="#geo">{t.nav.geo}</a>
               <a href="#features">{t.nav.features}</a>
               <a href="#rubric">{t.nav.rubric}</a>
               <a href="#report">{t.nav.report}</a>
@@ -103,6 +104,27 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
           </div>
         </div>
       </header>
+
+      {/* WHAT IS GEO */}
+      <section id="geo" className="alt">
+        <div className="wrap">
+          <div className="sec-head">
+            <p className="eyebrow">{t.geo.eyebrow}</p>
+            <h2>{t.geo.h2}</h2>
+            <Html html={t.geo.lead} />
+          </div>
+          <div className="geo-grid">
+            {t.geo.cards.map((card, i) => (
+              <div className="card" key={i}>
+                <div className="ico">{card.ico}</div>
+                <h3>{card.h3}</h3>
+                <p>{card.p}</p>
+              </div>
+            ))}
+          </div>
+          <p className="geo-closing">{t.geo.closing}</p>
+        </div>
+      </section>
 
       {/* WHY */}
       <section>
