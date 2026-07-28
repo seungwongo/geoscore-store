@@ -30,7 +30,15 @@ export async function verifyPaddleTransaction(
     },
   );
 
-  if (!res.ok) return null;
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    console.error(
+      `[paddle] transaction verify failed: HTTP ${res.status} (env=${
+        process.env.PADDLE_ENV
+      }) ${detail.slice(0, 300)}`,
+    );
+    return null;
+  }
 
   const body = (await res.json()) as {
     data?: {
