@@ -225,7 +225,7 @@ export default async function AdminDashboard({ params }: { params: { locale: str
   const funnelStats = [
     { label: "방문자", value: visitors, sub: `${pv.length} 페이지뷰` },
     { label: "구매버튼 클릭", value: buyClickSessions, sub: `${bc.length} 클릭` },
-    { label: "구매 완료", value: purchaseSessions30 || purchases30.length, sub: `${purchases30.length}건` },
+    { label: "구매 완료", value: purchases30.length, sub: `${purchaseSessions30} 세션` },
     { label: "클릭→구매 전환", value: pct(purchaseSessions30, buyClickSessions), sub: "세션 기준" },
     { label: "다운로드 실행", value: totalDownloads, sub: "누적" },
   ];
