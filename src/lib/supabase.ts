@@ -6,6 +6,7 @@ export interface DownloadRow {
   id: string;
   email: string;
   transaction_id: string | null;
+  session_id: string | null;
   created_at: string;
   expires_at: string;
   download_count: number;

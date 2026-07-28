@@ -5,40 +5,22 @@ import Link from "next/link";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getSessionId } from "@/lib/session";
 
-const MAX_ATTEMPTS = 8;
+const MAX_ATTEMPTS = 12;
 const DELAY_MS = 1500;
 
 export default function CheckoutSuccess({
-  txn,
   locale,
   t,
 }: {
-  txn: string | null;
   locale: Locale;
   t: Dictionary["checkout"];
 }) {
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    // DIAGNOSTIC: record that the success page loaded + the raw query string.
-    try {
-      fetch("/api/track", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "page_view",
-          locale,
-          path: `cksuccess:${(typeof window !== "undefined" ? window.location.search : "").slice(0, 180)}`,
-        }),
-        keepalive: true,
-      }).catch(() => {});
-    } catch {
-      /* ignore */
-    }
-
-    if (!txn) {
-      // Give the diagnostic beacon a moment, then bounce home.
-      setTimeout(() => window.location.replace(`/${locale}`), 1500);
+    const sid = getSessionId();
+    if (!sid) {
+      setFailed(true);
       return;
     }
     let cancelled = false;
@@ -46,15 +28,15 @@ export default function CheckoutSuccess({
     async function attempt(n: number): Promise<void> {
       if (cancelled) return;
       try {
-        const res = await fetch("/api/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ transactionId: txn, locale, sessionId: getSessionId() }),
+        const res = await fetch(`/api/checkout-status?sid=${encodeURIComponent(sid)}`, {
+          cache: "no-store",
         });
         if (res.ok) {
-          const data = (await res.json()) as { id: string };
-          window.location.replace(`/${locale}/download?id=${encodeURIComponent(data.id)}`);
-          return;
+          const data = (await res.json()) as { ready?: boolean; id?: string };
+          if (data.ready && data.id) {
+            window.location.replace(`/${locale}/download?id=${encodeURIComponent(data.id)}`);
+            return;
+          }
         }
       } catch {
         /* retry below */
@@ -63,7 +45,7 @@ export default function CheckoutSuccess({
         if (!cancelled) setFailed(true);
         return;
       }
-      // Paddle may still be finalizing the transaction — wait and retry.
+      // Wait for the webhook to create the download record, then retry.
       setTimeout(() => attempt(n + 1), DELAY_MS);
     }
 
@@ -71,7 +53,7 @@ export default function CheckoutSuccess({
     return () => {
       cancelled = true;
     };
-  }, [txn, locale]);
+  }, [locale]);
 
   return (
     <main className="dl">

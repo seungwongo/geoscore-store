@@ -54,7 +54,12 @@ export async function fulfillPurchase(params: {
   // index on transaction_id makes this fail — fall back to the existing row.
   const { data, error } = await supabaseAdmin()
     .from(DOWNLOADS_TABLE)
-    .insert({ email, transaction_id: verified.id, expires_at: expiresAt })
+    .insert({
+      email,
+      transaction_id: verified.id,
+      session_id: params.sessionId ?? null,
+      expires_at: expiresAt,
+    })
     .select("id")
     .single();
 
