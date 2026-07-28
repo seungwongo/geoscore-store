@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyPaddleTransaction } from "@/lib/paddle";
 import { sendCustomerEmail, sendNotifyEmail } from "@/lib/email";
 import { supabaseAdmin, DOWNLOADS_TABLE, DOWNLOAD_TTL_MS } from "@/lib/supabase";
+import { recordEvent, countryFromHeaders, languageFromHeaders } from "@/lib/analytics";
 import { isLocale, defaultLocale, type Locale } from "@/lib/i18n";
 
 export const runtime = "nodejs";
@@ -9,7 +10,7 @@ export const runtime = "nodejs";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: NextRequest) {
-  let body: { transactionId?: string; email?: string; locale?: string };
+  let body: { transactionId?: string; email?: string; locale?: string; sessionId?: string };
   try {
     body = await req.json();
   } catch {
@@ -75,6 +76,21 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     console.error("[verify] notify email failed:", err);
+  }
+
+  // Record the purchase event for funnel analytics (never block on failure).
+  try {
+    await recordEvent({
+      event: "purchase",
+      sessionId: body.sessionId?.slice(0, 64) ?? null,
+      locale,
+      path: `/${locale}`,
+      country: countryFromHeaders(req.headers),
+      language: languageFromHeaders(req.headers),
+      transactionId: verified.id,
+    });
+  } catch (err) {
+    console.error("[verify] analytics record failed:", err);
   }
 
   return NextResponse.json({ id: downloadId, emailSent: customerEmailSent });

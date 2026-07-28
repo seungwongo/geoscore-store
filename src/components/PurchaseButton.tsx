@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Locale } from "@/lib/i18n";
 import { openCheckout, isConfigured } from "@/lib/paddle-client";
+import { getSessionId, track } from "@/lib/session";
 
 type ModalStrings = {
   title: string;
@@ -61,7 +62,7 @@ export default function PurchaseButton({
       const res = await fetch("/api/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transactionId, email: cleanEmail, locale }),
+        body: JSON.stringify({ transactionId, email: cleanEmail, locale, sessionId: getSessionId() }),
       });
       if (!res.ok) throw new Error("verify failed");
       const data = (await res.json()) as { id: string };
@@ -80,6 +81,7 @@ export default function PurchaseButton({
         onClick={() => {
           reset();
           setOpen(true);
+          track("buy_click", locale);
         }}
       >
         {label}

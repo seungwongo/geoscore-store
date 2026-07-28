@@ -288,6 +288,18 @@ export const ko = {
     brandLine: "GeoScore · GEO 진단 크롬 확장 (v0.1.0)",
     copyright: "© 2026 SEUNGWONGO.PRO · All rights reserved",
     links: { privacy: "개인정보처리방침", terms: "이용약관", refund: "환불정책" },
+    adminLogin: "관리자 로그인",
+    dashboard: "대시보드",
+    logout: "로그아웃",
+  },
+  admin: {
+    loginTitle: "관리자 로그인",
+    email: "이메일",
+    password: "비밀번호",
+    submit: "로그인",
+    cancel: "취소",
+    loggingIn: "로그인 중…",
+    error: "이메일 또는 비밀번호가 올바르지 않습니다.",
   },
   modal: {
     title: "구매를 위해 이메일을 입력하세요",

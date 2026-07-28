@@ -1,6 +1,9 @@
-import Link from "next/link";
 import { getDictionary, isLocale, defaultLocale, type Locale } from "@/lib/i18n";
 import PurchaseButton from "@/components/PurchaseButton";
+import Footer from "@/components/Footer";
+import AnalyticsTracker from "@/components/AnalyticsTracker";
+
+export const dynamic = "force-dynamic";
 
 function Html({ as = "p", className, html }: { as?: "p" | "span" | "li"; className?: string; html: string }) {
   const Tag = as;
@@ -40,6 +43,7 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
 
   return (
     <>
+      <AnalyticsTracker locale={locale} />
       {/* HERO */}
       <header className="hero">
         <div className="wrap">
@@ -482,21 +486,7 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
         </div>
       </section>
 
-      <footer className="site">
-        <div className="wrap">
-          <div className="foot-top">
-            <div>
-              <b style={{ color: "#fff" }}>GeoScore</b> {t.footer.brandLine.replace("GeoScore ", "")}
-            </div>
-            <div>{t.footer.copyright}</div>
-          </div>
-          <div className="foot-links">
-            <Link href={`/${locale}/privacy`}>{t.footer.links.privacy}</Link>
-            <Link href={`/${locale}/terms`}>{t.footer.links.terms}</Link>
-            <Link href={`/${locale}/refund`}>{t.footer.links.refund}</Link>
-          </div>
-        </div>
-      </footer>
+      <Footer locale={locale} />
     </>
   );
 }

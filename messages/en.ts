@@ -290,6 +290,18 @@ export const en: typeof ko = {
     brandLine: "GeoScore · GEO diagnostic Chrome extension (v0.1.0)",
     copyright: "© 2026 SEUNGWONGO.PRO · All rights reserved",
     links: { privacy: "Privacy Policy", terms: "Terms of Service", refund: "Refund Policy" },
+    adminLogin: "Admin login",
+    dashboard: "Dashboard",
+    logout: "Log out",
+  },
+  admin: {
+    loginTitle: "Admin login",
+    email: "Email",
+    password: "Password",
+    submit: "Log in",
+    cancel: "Cancel",
+    loggingIn: "Logging in…",
+    error: "Incorrect email or password.",
   },
   modal: {
     title: "Enter your email to purchase",
