@@ -20,8 +20,25 @@ export default function CheckoutSuccess({
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
+    // DIAGNOSTIC: record that the success page loaded + the raw query string.
+    try {
+      fetch("/api/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "page_view",
+          locale,
+          path: `cksuccess:${(typeof window !== "undefined" ? window.location.search : "").slice(0, 180)}`,
+        }),
+        keepalive: true,
+      }).catch(() => {});
+    } catch {
+      /* ignore */
+    }
+
     if (!txn) {
-      window.location.replace(`/${locale}`);
+      // Give the diagnostic beacon a moment, then bounce home.
+      setTimeout(() => window.location.replace(`/${locale}`), 1500);
       return;
     }
     let cancelled = false;

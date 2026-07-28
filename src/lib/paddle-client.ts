@@ -59,6 +59,17 @@ async function ensurePaddle(): Promise<any> {
       // Drive the on-screen transition ourselves instead of relying only on
       // Paddle's successUrl redirect (which can be inconsistent for overlays).
       eventCallback: (event: any) => {
+        // DIAGNOSTIC: record every Paddle event so we can see what actually fires.
+        try {
+          fetch("/api/track", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: "buy_click", path: `pdlevt:${event?.name || "?"}` }),
+            keepalive: true,
+          }).catch(() => {});
+        } catch {
+          /* ignore */
+        }
         if (event?.name === "checkout.completed" && pendingSuccessUrl) {
           const txn = event?.data?.transaction_id || event?.data?.id;
           const dest = txn
