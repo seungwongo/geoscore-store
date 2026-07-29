@@ -61,6 +61,7 @@ export const ko = {
       },
     ],
     ctaBuy: "지금 구매 · $19",
+    onceNote: "한 번 결제로 평생 사용 · 월 구독 아님",
     ctaReport: "진단 리포트 예시 보기",
     ctaNote: "Chrome Manifest V3 · 서버 없음 · 본인 API 키(BYOK)",
     enginesLabel: "대응 엔진:",
@@ -311,6 +312,7 @@ export const ko = {
     p: "일회성 결제로 평생 사용. 로그인 없이 이메일만 입력하면 결제 후 바로 다운로드하고, 입력한 메일로도 압축 파일을 보내드립니다.",
     price: "$19",
     priceUnit: "일회성 · 평생 라이선스",
+    onceBadge: "일회성 결제 · 구독 아님",
     features: [
       "15개 항목 GEO 루브릭 전체",
       "BYOK — 본인 LLM 키로 정밀 진단",

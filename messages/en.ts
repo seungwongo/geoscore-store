@@ -63,6 +63,7 @@ export const en: typeof ko = {
       },
     ],
     ctaBuy: "Buy now · $19",
+    onceNote: "Pay once, use forever · not a subscription",
     ctaReport: "See a sample report",
     ctaNote: "Chrome Manifest V3 · No server · Bring your own API key (BYOK)",
     enginesLabel: "Engines covered:",
@@ -313,6 +314,7 @@ export const en: typeof ko = {
     p: "One-time payment, use it forever. No login — just enter your email, download right after payment, and we'll also send the zip to that address.",
     price: "$19",
     priceUnit: "one-time · lifetime license",
+    onceBadge: "One-time payment · not a subscription",
     features: [
       "The full 15-item GEO rubric",
       "BYOK — precise diagnosis with your own LLM key",

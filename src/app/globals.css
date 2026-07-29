@@ -397,3 +397,29 @@ footer.site a { color: #93c5fd; text-decoration: none; }
 .dash-trend-col.tip-left .dash-tip { left: auto; right: 0; transform: translateX(0) translateY(4px); }
 .dash-trend-col.tip-left:hover .dash-tip { transform: translateX(0) translateY(0); }
 .dash-trend-col.tip-left .dash-tip::after { left: auto; right: 20px; }
+
+/* one-time purchase reassurance */
+.cta-once {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #166534;
+  background: var(--green-bg);
+  border: 1px solid #bbf7d0;
+  padding: 6px 13px;
+  border-radius: 999px;
+}
+.cta-once::before { content: "✓ "; font-weight: 800; }
+.once-badge {
+  display: inline-block;
+  background: #eff6ff;
+  color: var(--blue-d);
+  border: 1px solid #dbeafe;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 5px 12px;
+  border-radius: 999px;
+  margin-bottom: 14px;
+  letter-spacing: 0.01em;
+}

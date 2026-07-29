@@ -79,6 +79,7 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
                   {t.hero.ctaReport}
                 </a>
               </div>
+              <p className="cta-once">{t.hero.onceNote}</p>
               <p className="cta-note">{t.hero.ctaNote}</p>
               <p className="engines">
                 {t.hero.enginesLabel} <b>{t.hero.enginesValue}</b>
@@ -322,6 +323,7 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
             <p>{t.purchase.p}</p>
           </div>
           <div className="pricing">
+            <div className="once-badge">{t.purchase.onceBadge}</div>
             <div className="price">{t.purchase.price}</div>
             <div className="price-unit">{t.purchase.priceUnit}</div>
             <ul>
@@ -346,6 +348,9 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
           <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>{t.ctaFinal.h2}</h2>
           <p style={{ color: "var(--gray)", fontSize: 16, margin: "0 0 24px" }}>{t.ctaFinal.p}</p>
           <PurchaseButton locale={locale} label={t.ctaFinal.button} modal={t.modal} />
+          <p className="cta-once" style={{ margin: "16px auto 0" }}>
+            {t.hero.onceNote}
+          </p>
           <Html className="disc" html={t.ctaFinal.disclaimer} />
         </div>
       </section>
