@@ -82,12 +82,28 @@ function Trend({
   const maxViews = Math.max(1, ...buckets.map((b) => b.views));
   return (
     <div className="dash-trend">
-      {buckets.map((b) => (
+      {buckets.map((b, idx) => (
         <div
-          className="dash-trend-col"
+          className={`dash-trend-col${idx < 2 ? " tip-right" : ""}${
+            idx > buckets.length - 3 ? " tip-left" : ""
+          }`}
           key={b.key}
-          title={`${b.key} · ${b.views}뷰 · ${b.purchases}구매 · ${money(b.revenue, primaryCur)}`}
         >
+          <div className="dash-tip" role="tooltip">
+            <div className="dash-tip-title">{b.key}</div>
+            <div className="dash-tip-row">
+              <span className="dash-tip-dot view" />
+              페이지뷰 <b>{b.views.toLocaleString()}</b>
+            </div>
+            <div className="dash-tip-row">
+              <span className="dash-tip-dot buy" />
+              구매 <b>{b.purchases.toLocaleString()}</b>
+            </div>
+            <div className="dash-tip-row">
+              <span className="dash-tip-dot rev" />
+              매출 <b>{money(b.revenue, primaryCur)}</b>
+            </div>
+          </div>
           <span className="dash-trend-bar" style={{ height: `${(b.views / maxViews) * 100}%` }}>
             {b.purchases > 0 && (
               <span

@@ -348,3 +348,52 @@ footer.site a { color: #93c5fd; text-decoration: none; }
   .nav-menu { display: flex; flex-direction: column; width: 100%; margin-top: 14px; border-top: 1px solid var(--line); }
   .nav-menu a { padding: 13px 4px; color: var(--gray); text-decoration: none; font-weight: 600; font-size: 15px; border-bottom: 1px solid #f1f5f9; }
 }
+
+/* dashboard trend hover tooltip */
+.dash-trend-col { position: relative; }
+.dash-tip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  min-width: 154px;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 12px 30px -8px rgba(15, 23, 42, 0.45);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 10;
+  pointer-events: none;
+  text-align: left;
+}
+.dash-trend-col:hover .dash-tip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+.dash-tip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--ink);
+}
+.dash-tip-title { font-weight: 800; font-size: 12px; margin-bottom: 6px; }
+.dash-tip-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #cbd5e1; margin: 3px 0; white-space: nowrap; }
+.dash-tip-row b { color: #fff; margin-left: auto; font-weight: 700; }
+.dash-tip-dot { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+.dash-tip-dot.view { background: #60a5fa; }
+.dash-tip-dot.buy { background: var(--ready); }
+.dash-tip-dot.rev { background: #cbd5e1; }
+/* edge columns: align tooltip inward so it doesn't clip */
+.dash-trend-col.tip-right .dash-tip { left: 0; transform: translateX(0) translateY(4px); }
+.dash-trend-col.tip-right:hover .dash-tip { transform: translateX(0) translateY(0); }
+.dash-trend-col.tip-right .dash-tip::after { left: 20px; }
+.dash-trend-col.tip-left .dash-tip { left: auto; right: 0; transform: translateX(0) translateY(4px); }
+.dash-trend-col.tip-left:hover .dash-tip { transform: translateX(0) translateY(0); }
+.dash-trend-col.tip-left .dash-tip::after { left: auto; right: 20px; }
