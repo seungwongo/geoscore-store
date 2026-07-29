@@ -306,6 +306,7 @@ export const en: typeof ko = {
         p: "Click 'Load unpacked' and select the unzipped folder to finish installing.",
       },
     ],
+    warn: "If 'Developer mode' is off, the 'Load unpacked' button won't appear. Be sure to turn it on first in step 2.",
     note: "Once installed, click the GeoScore icon in your toolbar to start diagnosing right away.",
   },
   purchase: {

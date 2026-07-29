@@ -308,7 +308,8 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
               </div>
             ))}
           </div>
-          <p className="meta" style={{ textAlign: "center", maxWidth: 620, margin: "24px auto 0" }}>
+          <p className="install-warn">⚠️ {t.install.warn}</p>
+          <p className="meta" style={{ textAlign: "center", maxWidth: 620, margin: "16px auto 0" }}>
             {t.install.note}
           </p>
         </div>
