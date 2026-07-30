@@ -3,6 +3,7 @@ import {
   recordEvent,
   countryFromHeaders,
   languageFromHeaders,
+  normalizeSource,
   type AnalyticsEvent,
 } from "@/lib/analytics";
 
@@ -11,7 +12,7 @@ export const runtime = "nodejs";
 const ALLOWED: AnalyticsEvent[] = ["page_view", "buy_click"];
 
 export async function POST(req: NextRequest) {
-  let body: { type?: string; sessionId?: string; locale?: string; path?: string };
+  let body: { type?: string; sessionId?: string; locale?: string; path?: string; ref?: string; utm?: string | null };
   try {
     body = await req.json();
   } catch {
@@ -31,6 +32,7 @@ export async function POST(req: NextRequest) {
       path: body.path?.slice(0, 256) ?? null,
       country: countryFromHeaders(req.headers),
       language: languageFromHeaders(req.headers),
+      referrer: normalizeSource(body.ref, body.utm, req.headers.get("host")),
     });
   } catch (err) {
     console.error("[track] insert failed:", err);

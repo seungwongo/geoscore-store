@@ -17,7 +17,48 @@ interface AnalyticsRow {
   session_id: string | null;
   country: string | null;
   language: string | null;
+  referrer: string | null;
   created_at: string;
+}
+
+const SOURCE_LABEL: Record<string, string> = {
+  direct: "직접 방문",
+  "google.com": "Google",
+  "google.co.kr": "Google",
+  "bing.com": "Bing",
+  "search.naver.com": "네이버",
+  "naver.com": "네이버",
+  "daum.net": "다음",
+  "chatgpt.com": "ChatGPT (AI)",
+  "chat.openai.com": "ChatGPT (AI)",
+  "perplexity.ai": "Perplexity (AI)",
+  "gemini.google.com": "Gemini (AI)",
+  "facebook.com": "Facebook",
+  "m.facebook.com": "Facebook",
+  "t.co": "X (Twitter)",
+  "x.com": "X (Twitter)",
+  "twitter.com": "X (Twitter)",
+  "instagram.com": "Instagram",
+  "linkedin.com": "LinkedIn",
+  "youtube.com": "YouTube",
+  "reddit.com": "Reddit",
+  "threads.net": "Threads",
+};
+
+function sourceLabel(ref: string): string {
+  return SOURCE_LABEL[ref] || ref || "직접 방문";
+}
+
+function sourceCounts(rows: AnalyticsRow[], limit = 8): [string, number][] {
+  const map = new Map<string, number>();
+  for (const r of rows) {
+    const key = r.referrer || "direct";
+    map.set(key, (map.get(key) ?? 0) + 1);
+  }
+  return [...map.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([k, n]) => [sourceLabel(k), n] as [string, number]);
 }
 
 interface DownloadRow {
@@ -132,7 +173,7 @@ export default async function AdminDashboard({ params }: { params: { locale: str
   const [{ data: aData }, { data: dData }] = await Promise.all([
     sb
       .from(ANALYTICS_TABLE)
-      .select("event_type, session_id, country, language, created_at")
+      .select("event_type, session_id, country, language, referrer, created_at")
       .gte("created_at", sinceAnalytics)
       .order("created_at", { ascending: false })
       .limit(100000),
@@ -310,6 +351,11 @@ export default async function AdminDashboard({ params }: { params: { locale: str
         <section className="dash-card">
           <h2>언어별 <span className="meta">(페이지뷰)</span></h2>
           <Bars data={topCounts(pv, "language")} />
+        </section>
+
+        <section className="dash-card">
+          <h2>유입경로 <span className="meta">(페이지뷰)</span></h2>
+          <Bars data={sourceCounts(pv)} />
         </section>
 
         <section className="dash-card dash-card-wide">

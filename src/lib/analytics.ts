@@ -22,6 +22,24 @@ export function languageFromHeaders(headers: Headers): string | null {
   return first || null;
 }
 
+/** Normalize a raw referrer URL + utm_source into a compact source label
+ *  (hostname only, no path/query) — "direct" for same-site or empty. */
+export function normalizeSource(
+  rawRef: string | null | undefined,
+  utm: string | null | undefined,
+  selfHost: string | null | undefined,
+): string {
+  if (utm) return utm.toLowerCase().slice(0, 60);
+  if (!rawRef) return "direct";
+  try {
+    const host = new URL(rawRef).hostname.replace(/^www\./, "").toLowerCase();
+    if (!host || host === (selfHost || "").replace(/^www\./, "").toLowerCase()) return "direct";
+    return host.slice(0, 80);
+  } catch {
+    return "direct";
+  }
+}
+
 export async function recordEvent(params: {
   event: AnalyticsEvent;
   sessionId?: string | null;
@@ -29,6 +47,7 @@ export async function recordEvent(params: {
   path?: string | null;
   country?: string | null;
   language?: string | null;
+  referrer?: string | null;
   transactionId?: string | null;
 }): Promise<void> {
   await supabaseAdmin()
@@ -40,6 +59,7 @@ export async function recordEvent(params: {
       path: params.path ?? null,
       country: params.country ?? null,
       language: params.language ?? null,
+      referrer: params.referrer ?? null,
       transaction_id: params.transactionId ?? null,
     });
 }

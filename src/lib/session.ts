@@ -20,6 +20,10 @@ export function getSessionId(): string {
 
 export function track(type: "page_view" | "buy_click", locale: string): void {
   try {
+    const utm =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("utm_source")
+        : null;
     fetch("/api/track", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -28,6 +32,8 @@ export function track(type: "page_view" | "buy_click", locale: string): void {
         sessionId: getSessionId(),
         locale,
         path: typeof window !== "undefined" ? window.location.pathname : undefined,
+        ref: typeof document !== "undefined" ? document.referrer : undefined,
+        utm,
       }),
       keepalive: true,
     }).catch(() => {});
