@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getAdminSession } from "@/lib/admin";
 import { isLocale, defaultLocale, type Locale } from "@/lib/i18n";
 import { supabaseAdmin, DOWNLOADS_TABLE } from "@/lib/supabase";
-import { ANALYTICS_TABLE } from "@/lib/analytics";
+import { ANALYTICS_TABLE, sourceLabel } from "@/lib/analytics";
 import LogoutButton from "@/components/LogoutButton";
 
 export const dynamic = "force-dynamic";
@@ -19,34 +19,6 @@ interface AnalyticsRow {
   language: string | null;
   referrer: string | null;
   created_at: string;
-}
-
-const SOURCE_LABEL: Record<string, string> = {
-  direct: "직접 방문",
-  "google.com": "Google",
-  "google.co.kr": "Google",
-  "bing.com": "Bing",
-  "search.naver.com": "네이버",
-  "naver.com": "네이버",
-  "daum.net": "다음",
-  "chatgpt.com": "ChatGPT (AI)",
-  "chat.openai.com": "ChatGPT (AI)",
-  "perplexity.ai": "Perplexity (AI)",
-  "gemini.google.com": "Gemini (AI)",
-  "facebook.com": "Facebook",
-  "m.facebook.com": "Facebook",
-  "t.co": "X (Twitter)",
-  "x.com": "X (Twitter)",
-  "twitter.com": "X (Twitter)",
-  "instagram.com": "Instagram",
-  "linkedin.com": "LinkedIn",
-  "youtube.com": "YouTube",
-  "reddit.com": "Reddit",
-  "threads.net": "Threads",
-};
-
-function sourceLabel(ref: string): string {
-  return SOURCE_LABEL[ref] || ref || "직접 방문";
 }
 
 function sourceCounts(rows: AnalyticsRow[], limit = 8): [string, number][] {

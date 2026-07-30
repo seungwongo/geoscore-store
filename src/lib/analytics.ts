@@ -4,6 +4,39 @@ export const ANALYTICS_TABLE = "geoscore_analytics";
 
 export type AnalyticsEvent = "page_view" | "buy_click" | "purchase";
 
+/** Friendly labels for normalized traffic sources (AI engines tagged). */
+export const SOURCE_LABEL: Record<string, string> = {
+  direct: "직접 방문",
+  "google.com": "Google",
+  "google.co.kr": "Google",
+  "bing.com": "Bing",
+  "search.naver.com": "네이버",
+  "naver.com": "네이버",
+  "daum.net": "다음",
+  "chatgpt.com": "ChatGPT (AI)",
+  "chat.openai.com": "ChatGPT (AI)",
+  "perplexity.ai": "Perplexity (AI)",
+  "gemini.google.com": "Gemini (AI)",
+  "facebook.com": "Facebook",
+  "m.facebook.com": "Facebook",
+  "l.facebook.com": "Facebook",
+  "lm.facebook.com": "Facebook",
+  "l.instagram.com": "Instagram",
+  "t.co": "X (Twitter)",
+  "x.com": "X (Twitter)",
+  "twitter.com": "X (Twitter)",
+  "instagram.com": "Instagram",
+  "linkedin.com": "LinkedIn",
+  "youtube.com": "YouTube",
+  "reddit.com": "Reddit",
+  "threads.net": "Threads",
+};
+
+export function sourceLabel(ref: string | null | undefined): string {
+  const key = ref || "direct";
+  return SOURCE_LABEL[key] || key;
+}
+
 /** Best-effort country from CDN/proxy headers (no raw IP is stored). */
 export function countryFromHeaders(headers: Headers): string | null {
   return (

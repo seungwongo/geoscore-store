@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { getDictionary, type Locale } from "@/lib/i18n";
+import type { DailyStats } from "@/lib/report";
 
 const BRAND = "#2563eb";
 const BRAND_DARK = "#1d4ed8";
@@ -150,6 +151,82 @@ export async function sendNotifyEmail(params: {
     from: `GeoScore <${process.env.GOOGLE_MAIL}>`,
     to: notifyTo,
     subject: `${t.subject} · ${params.customerEmail}`,
+    html,
+  });
+}
+
+export async function sendDailyReportEmail(stats: DailyStats): Promise<void> {
+  const notifyTo = process.env.NOTIFY_EMAIL;
+  if (!notifyTo) return;
+
+  const dateKst = new Date().toLocaleString("ko-KR", {
+    timeZone: "Asia/Seoul",
+    dateStyle: "long",
+    timeStyle: "short",
+  });
+  const money = (() => {
+    try {
+      return new Intl.NumberFormat("en-US", { style: "currency", currency: stats.currency }).format(
+        stats.revenue,
+      );
+    } catch {
+      return `${stats.revenue} ${stats.currency}`;
+    }
+  })();
+
+  const stat = (label: string, value: string, sub: string) => `
+    <td style="width:50%;padding:8px;">
+      <div style="border:1px solid ${LINE};border-radius:12px;padding:14px 16px;">
+        <div style="font-size:22px;font-weight:800;color:${INK};">${value}</div>
+        <div style="font-size:13px;color:${GRAY};font-weight:600;margin-top:2px;">${label}</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:1px;">${sub}</div>
+      </div>
+    </td>`;
+
+  const list = (title: string, items: [string, number][]) => {
+    const body =
+      items.length === 0
+        ? `<div style="color:#94a3b8;font-size:13px;">데이터 없음</div>`
+        : items
+            .map(
+              ([k, n]) =>
+                `<div style="display:flex;justify-content:space-between;font-size:13px;color:${GRAY};padding:4px 0;border-bottom:1px solid #f1f5f9;">
+                  <span>${k}</span><b style="color:${INK};">${n}</b></div>`,
+            )
+            .join("");
+    return `<div style="border:1px solid ${LINE};border-radius:12px;padding:14px 16px;">
+      <div style="font-weight:700;font-size:14px;color:${INK};margin-bottom:8px;">${title}</div>${body}</div>`;
+  };
+
+  const html = `<!doctype html><html><body style="margin:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo',Roboto,sans-serif;">
+    <table role="presentation" width="100%" style="padding:28px 12px;"><tr><td align="center">
+      <table role="presentation" width="100%" style="max-width:560px;background:#fff;border:1px solid ${LINE};border-radius:16px;overflow:hidden;">
+        <tr><td style="background:radial-gradient(600px 220px at 80% -20%, #eff6ff 0%, #ffffff 70%);padding:24px 24px 8px;">
+          <div style="font-weight:800;font-size:16px;color:${BRAND_DARK};">GeoScore</div>
+          <h1 style="margin:8px 0 2px;font-size:20px;color:${INK};">📊 일일 리포트 · 지난 24시간</h1>
+          <div style="font-size:12px;color:#94a3b8;">${dateKst} (KST) 기준</div>
+        </td></tr>
+        <tr><td style="padding:8px 16px 4px;">
+          <table role="presentation" width="100%"><tr>
+            ${stat("방문자", String(stats.visitors), `${stats.pageViews} 페이지뷰`)}
+            ${stat("구매버튼 클릭", String(stats.buyClickSessions), `${stats.buyClicks} 클릭`)}
+          </tr><tr>
+            ${stat("구매 완료", String(stats.purchases), `방문→구매 ${stats.cvrVisitor}`)}
+            ${stat("매출", money, `클릭→구매 ${stats.cvrClick}`)}
+          </tr></table>
+        </td></tr>
+        <tr><td style="padding:6px 24px 8px;">${list("국가별 (방문)", stats.topCountries)}</td></tr>
+        <tr><td style="padding:2px 24px 22px;">${list("유입경로 (방문)", stats.topSources)}</td></tr>
+        <tr><td style="padding:0 24px 24px;">
+          <a href="${appUrl()}" style="font-size:12px;color:${BRAND};text-decoration:none;">GeoScore 대시보드 열기 →</a>
+        </td></tr>
+      </table>
+    </td></tr></table></body></html>`;
+
+  await transport().sendMail({
+    from: `GeoScore <${process.env.GOOGLE_MAIL}>`,
+    to: notifyTo,
+    subject: `📊 GeoScore 일일 리포트 · 방문 ${stats.visitors} · 구매 ${stats.purchases} · 매출 ${money}`,
     html,
   });
 }
