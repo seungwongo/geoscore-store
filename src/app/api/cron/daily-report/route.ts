@@ -8,10 +8,16 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 function authorized(req: NextRequest): boolean {
+  // Preferred: CRON_SECRET as a Bearer token (Vercel adds this automatically
+  // when the env var is set; also used for manual/testing calls).
   const secret = process.env.CRON_SECRET;
-  // If no secret is configured, only allow Vercel's own cron invocations.
-  if (!secret) return req.headers.get("x-vercel-cron") === "1";
-  return req.headers.get("authorization") === `Bearer ${secret}`;
+  if (secret && req.headers.get("authorization") === `Bearer ${secret}`) return true;
+  // Fallback: Vercel's own cron invocations (so it still works if CRON_SECRET
+  // hasn't been set in the project env).
+  const ua = req.headers.get("user-agent") || "";
+  if (ua.includes("vercel-cron")) return true;
+  if (req.headers.get("x-vercel-cron") === "1") return true;
+  return false;
 }
 
 async function handle(req: NextRequest) {
