@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "../globals.css";
 import { getDictionary, isLocale, locales, defaultLocale } from "@/lib/i18n";
 
@@ -54,7 +55,14 @@ export default function LocaleLayout({
   const lang = isLocale(params.locale) ? params.locale : defaultLocale;
   return (
     <html lang={lang}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Script
+          src="https://www.sourced.chat/widget.js"
+          strategy="afterInteractive"
+          data-key="2c45c42770a4d0e81965ca55b22a95ae"
+        />
+      </body>
     </html>
   );
 }
