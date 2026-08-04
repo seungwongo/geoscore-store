@@ -304,6 +304,16 @@ export const ko = {
         p: "'압축해제된 확장 프로그램을 로드합니다' 버튼을 눌러, 압축을 푼 폴더를 선택하면 설치가 완료됩니다.",
       },
     ],
+    apiStep: {
+      h4: "API 키 설정 (선택)",
+      p: "설정(Settings) 탭에서 OpenAI·Anthropic(Claude)·Google(Gemini) 중 원하는 제공자의 API 키를 입력하면 정성 항목과 문장 재작성까지 정밀 진단이 채워집니다. 키가 없어도 휴리스틱 항목은 그대로 동작합니다.",
+    },
+    apiKeyLabel: "API 키 발급 링크",
+    apiProviders: [
+      { name: "OpenAI (GPT)", url: "https://platform.openai.com/api-keys" },
+      { name: "Anthropic (Claude)", url: "https://console.anthropic.com/settings/keys" },
+      { name: "Google (Gemini)", url: "https://aistudio.google.com/apikey" },
+    ],
     warn: "'개발자 모드'가 꺼져 있으면 '압축해제된 확장 프로그램을 로드' 버튼이 나타나지 않습니다. 2단계에서 반드시 먼저 켜주세요.",
     note: "설치가 끝나면 툴바의 GeoScore 아이콘을 클릭해 바로 진단을 시작할 수 있습니다.",
   },
@@ -541,6 +551,9 @@ export const ko = {
         "크롬에서 chrome://extensions 를 열고 '개발자 모드'를 켭니다.",
         "'압축해제된 확장 프로그램을 로드'로 압축 푼 폴더를 선택합니다.",
       ],
+      apiTitle: "정밀 진단 (선택): API 키 설정",
+      apiIntro:
+        "설정(Settings) 탭에서 아래 제공자 중 하나의 API 키를 입력하면 정성 항목과 문장 재작성까지 채워집니다. 키가 없어도 기본 진단은 동작합니다.",
       footerNote:
         "이 다운로드 링크는 구매 후 30일간 유효합니다. 문의: support@thegreat.io · 이 메일은 GeoScore 구매에 따라 발송되었습니다.",
     },

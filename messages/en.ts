@@ -306,6 +306,16 @@ export const en: typeof ko = {
         p: "Click 'Load unpacked' and select the unzipped folder to finish installing.",
       },
     ],
+    apiStep: {
+      h4: "Set an API key (optional)",
+      p: "In the Settings tab, add an API key for OpenAI, Anthropic (Claude) or Google (Gemini) to fill in the qualitative items and sentence rewrites. Heuristic items work even without a key.",
+    },
+    apiKeyLabel: "Get an API key",
+    apiProviders: [
+      { name: "OpenAI (GPT)", url: "https://platform.openai.com/api-keys" },
+      { name: "Anthropic (Claude)", url: "https://console.anthropic.com/settings/keys" },
+      { name: "Google (Gemini)", url: "https://aistudio.google.com/apikey" },
+    ],
     warn: "If 'Developer mode' is off, the 'Load unpacked' button won't appear. Be sure to turn it on first in step 2.",
     note: "Once installed, click the GeoScore icon in your toolbar to start diagnosing right away.",
   },
@@ -543,6 +553,9 @@ export const en: typeof ko = {
         "Open chrome://extensions in Chrome and turn on 'Developer mode'.",
         "Use 'Load unpacked' and select the unzipped folder.",
       ],
+      apiTitle: "Precise diagnosis (optional): set an API key",
+      apiIntro:
+        "In the Settings tab, add an API key for one of the providers below to fill in the qualitative items and sentence rewrites. Basic diagnosis works without a key.",
       footerNote:
         "This download link is valid for 30 days after purchase. Support: support@thegreat.io · This email was sent regarding your GeoScore purchase.",
     },

@@ -25,7 +25,16 @@ function appUrl(): string {
 }
 
 function customerHtml(locale: Locale, downloadUrl: string): string {
-  const t = getDictionary(locale).email.customer;
+  const dict = getDictionary(locale);
+  const t = dict.email.customer;
+  const apiLinks = dict.install.apiProviders
+    .map(
+      (p) =>
+        `<a href="${p.url}" style="display:inline-block;margin:0 8px 8px 0;padding:8px 12px;
+          border:1px solid ${LINE};border-radius:8px;color:${BRAND};text-decoration:none;
+          font-size:13px;font-weight:600;">${p.name} ↗</a>`,
+    )
+    .join("");
   const steps = t.installSteps
     .map(
       (s, i) => `
@@ -76,6 +85,15 @@ function customerHtml(locale: Locale, downloadUrl: string): string {
               <div style="border:1px solid ${LINE};border-radius:14px;padding:18px 20px;">
                 <div style="font-weight:700;font-size:15px;color:${INK};margin-bottom:6px;">${t.installTitle}</div>
                 <table role="presentation" cellpadding="0" cellspacing="0" width="100%">${steps}</table>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 32px 4px;">
+              <div style="border:1px solid ${LINE};border-radius:14px;padding:18px 20px;">
+                <div style="font-weight:700;font-size:15px;color:${INK};margin-bottom:6px;">${t.apiTitle}</div>
+                <p style="margin:0 0 12px;color:${GRAY};font-size:14px;line-height:1.6;">${t.apiIntro}</p>
+                ${apiLinks}
               </div>
             </td>
           </tr>

@@ -299,7 +299,7 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
             <h2>{t.install.h2}</h2>
             <p>{t.install.p}</p>
           </div>
-          <div className="steps">
+          <div className="steps steps-4">
             {t.install.steps.map((s, i) => (
               <div className="step" key={i}>
                 <div className="n">{i + 1}</div>
@@ -307,6 +307,21 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
                 <p>{s.p}</p>
               </div>
             ))}
+            <div className="step">
+              <div className="n">4</div>
+              <h4>{t.install.apiStep.h4}</h4>
+              <p>{t.install.apiStep.p}</p>
+              <div className="api-links-label">{t.install.apiKeyLabel}</div>
+              <ul className="api-links">
+                {t.install.apiProviders.map((p, j) => (
+                  <li key={j}>
+                    <a href={p.url} target="_blank" rel="noopener noreferrer">
+                      {p.name} ↗
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
           <p className="install-warn">⚠️ {t.install.warn}</p>
           <p className="meta" style={{ textAlign: "center", maxWidth: 620, margin: "16px auto 0" }}>

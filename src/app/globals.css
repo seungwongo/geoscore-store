@@ -438,3 +438,13 @@ footer.site a { color: #93c5fd; text-decoration: none; }
   padding: 12px 18px;
   border-radius: 12px;
 }
+
+/* install: 4-step grid + API key links */
+.steps-4 { grid-template-columns: repeat(4, 1fr); }
+.api-links-label { margin-top: 12px; font-size: 12px; font-weight: 700; color: var(--ink); }
+.api-links { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 6px; }
+.api-links a { display: inline-block; font-size: 13px; font-weight: 600; color: var(--blue); text-decoration: none; }
+.api-links a:hover { color: var(--blue-d); text-decoration: underline; }
+@media (max-width: 1024px) and (min-width: 821px) {
+  .steps-4 { grid-template-columns: repeat(2, 1fr); }
+}
