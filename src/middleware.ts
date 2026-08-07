@@ -24,7 +24,8 @@ export function middleware(req: NextRequest) {
 
   // The page path without the locale prefix, e.g. "privacy" or "" for home.
   const innerPath = (hasLocale ? segments.slice(1) : segments).join("/");
-  const known = KNOWN_PAGES.has(innerPath);
+  // "articles" and "articles/<slug>" are all valid (dynamic detail pages).
+  const known = KNOWN_PAGES.has(innerPath) || innerPath === "articles" || innerPath.startsWith("articles/");
 
   // Correctly locale-prefixed and a real page → let it through.
   if (hasLocale && known) return NextResponse.next();

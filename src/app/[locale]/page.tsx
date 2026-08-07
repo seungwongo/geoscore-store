@@ -68,7 +68,7 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
       {/* HERO */}
       <header className="hero">
         <div className="wrap">
-          <HeroNav nav={t.nav} />
+          <HeroNav nav={t.nav} locale={locale} />
           <div className="hero-grid">
             <div>
               <p className="eyebrow">{t.hero.eyebrow}</p>

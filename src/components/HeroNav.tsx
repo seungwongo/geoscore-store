@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 type NavStrings = {
   geo: string;
@@ -9,12 +10,13 @@ type NavStrings = {
   report: string;
   install: string;
   buy: string;
+  articles: string;
 };
 
-export default function HeroNav({ nav }: { nav: NavStrings }) {
+export default function HeroNav({ nav, locale }: { nav: NavStrings; locale: string }) {
   const [open, setOpen] = useState(false);
 
-  const links = [
+  const anchors = [
     { href: "#geo", label: nav.geo },
     { href: "#features", label: nav.features },
     { href: "#rubric", label: nav.rubric },
@@ -22,6 +24,7 @@ export default function HeroNav({ nav }: { nav: NavStrings }) {
     { href: "#install", label: nav.install },
     { href: "#buy", label: nav.buy },
   ];
+  const articlesHref = `/${locale}/articles`;
 
   return (
     <nav className="nav">
@@ -30,11 +33,14 @@ export default function HeroNav({ nav }: { nav: NavStrings }) {
       </div>
 
       <div className="links">
-        {links.map((l) => (
+        {anchors.map((l) => (
           <a key={l.href} href={l.href}>
             {l.label}
           </a>
         ))}
+        <Link href={articlesHref} className="nav-articles">
+          {nav.articles}
+        </Link>
       </div>
 
       <button
@@ -51,11 +57,14 @@ export default function HeroNav({ nav }: { nav: NavStrings }) {
 
       {open && (
         <div className="nav-menu">
-          {links.map((l) => (
+          {anchors.map((l) => (
             <a key={l.href} href={l.href} onClick={() => setOpen(false)}>
               {l.label}
             </a>
           ))}
+          <Link href={articlesHref} onClick={() => setOpen(false)}>
+            {nav.articles}
+          </Link>
         </div>
       )}
     </nav>

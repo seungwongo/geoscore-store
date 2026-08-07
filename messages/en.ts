@@ -14,6 +14,22 @@ export const en: typeof ko = {
     privacy: "Privacy",
     install: "Install",
     buy: "Buy",
+    articles: "Articles",
+  },
+  articles: {
+    eyebrow: "GEO Articles",
+    title: "How to Get Cited by AI — a GEO Guide",
+    subtitle: "GEO cases and hands-on methods to boost your visibility in the AI era.",
+    minRead: "min read",
+    backToList: "← All articles",
+    backHome: "← Home",
+    publishedOn: "Published",
+    related: "More articles",
+    cta: {
+      heading: "Will AI cite your page?",
+      sub: "Score this page 0–100 with GeoScore and get the exact sentences to fix. One-time payment, use forever.",
+      button: "Buy GeoScore · $19",
+    },
   },
   geo: {
     eyebrow: "What is GEO?",

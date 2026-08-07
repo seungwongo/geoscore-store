@@ -12,6 +12,22 @@ export const ko = {
     privacy: "프라이버시",
     install: "설치 방법",
     buy: "구매하기",
+    articles: "아티클",
+  },
+  articles: {
+    eyebrow: "GEO 아티클",
+    title: "AI에 인용되는 법, GEO 가이드",
+    subtitle: "AI 시대에 노출을 높이는 GEO 사례와 실전 방법을 정리했습니다.",
+    minRead: "분 분량",
+    backToList: "← 아티클 목록",
+    backHome: "← 홈으로",
+    publishedOn: "게시일",
+    related: "다른 아티클",
+    cta: {
+      heading: "내 페이지는 AI에 인용될까?",
+      sub: "GeoScore로 지금 이 페이지를 0~100점으로 진단하고, 고칠 문장까지 받아보세요. 일회성 결제 · 평생 사용.",
+      button: "GeoScore 구매 · $19",
+    },
   },
   geo: {
     eyebrow: "GEO란?",
