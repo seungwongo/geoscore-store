@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -42,6 +43,14 @@ export function generateMetadata({
   };
 }
 
+// One CTA per article. Placement (middle vs end) is derived from the slug so it
+// varies article-to-article but stays stable across renders (no hydration drift).
+function ctaPlacement(slug: string): "middle" | "end" {
+  let h = 0;
+  for (let i = 0; i < slug.length; i++) h += slug.charCodeAt(i);
+  return h % 2 === 0 ? "middle" : "end";
+}
+
 function Block({ block, locale }: { block: ArticleBlock; locale: Locale }) {
   switch (block.t) {
     case "h2":
@@ -83,6 +92,21 @@ export default function ArticleDetailPage({
   const locale: Locale = isLocale(params.locale) ? params.locale : defaultLocale;
   const t = getDictionary(locale).articles;
   const c = article[locale];
+
+  // Exactly one CTA per article. Ignore any legacy inline cta markers; place the
+  // single CTA either mid-article (before the h2 nearest the middle) or at the end.
+  const contentBlocks = c.blocks.filter((b) => b.t !== "cta");
+  let ctaBefore = -1;
+  if (ctaPlacement(article.slug) === "middle" && contentBlocks.length > 2) {
+    const mid = contentBlocks.length / 2;
+    const h2s = contentBlocks
+      .map((b, i) => (b.t === "h2" ? i : -1))
+      .filter((i) => i > 0);
+    ctaBefore = h2s.length
+      ? h2s.reduce((best, i) => (Math.abs(i - mid) < Math.abs(best - mid) ? i : best), h2s[0])
+      : Math.floor(mid);
+  }
+  const showEndCta = ctaBefore === -1;
 
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/$/, "");
   const url = `${appUrl}/${locale}/articles/${article.slug}`;
@@ -132,13 +156,15 @@ export default function ArticleDetailPage({
         </div>
 
         <article className="article-body">
-          {c.blocks.map((block, i) => (
-            <Block key={i} block={block} locale={locale} />
+          {contentBlocks.map((block, i) => (
+            <Fragment key={i}>
+              {i === ctaBefore && <ArticleCta locale={locale} />}
+              <Block block={block} locale={locale} />
+            </Fragment>
           ))}
         </article>
 
-        {/* bottom CTA (always) */}
-        <ArticleCta locale={locale} />
+        {showEndCta && <ArticleCta locale={locale} />}
 
         <section className="article-related">
           <h3>{t.related}</h3>
