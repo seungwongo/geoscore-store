@@ -49,11 +49,23 @@ export async function verifyPaddleTransaction(
       currency_code?: string;
       customer?: { email?: string };
       details?: { totals?: { grand_total?: string } };
+      items?: { price?: { id?: string } }[];
     };
   };
 
   const data = body.data;
   if (!data?.id || !data.status) return null;
+
+  // The Paddle account is shared across products (GeoScore, Sasang Table, ...).
+  // Only ever fulfill transactions that contain *our* price — otherwise a foreign
+  // product's purchase (arriving via webhook or a pasted transaction id) would
+  // trigger the GeoScore download email.
+  const ourPriceId = process.env.NEXT_PUBLIC_PADDLE_PRICE_ID;
+  const items = data.items ?? [];
+  if (ourPriceId && items.length > 0 && !items.some((i) => i.price?.id === ourPriceId)) {
+    console.log(`[paddle] transaction ${data.id} is for a different product — skipping`);
+    return null;
+  }
 
   // Paddle marks a successful transaction as "completed" (also "paid" in some flows).
   const paidStatuses = new Set(["completed", "paid", "billed"]);
