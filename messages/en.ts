@@ -360,7 +360,7 @@ export const en: typeof ko = {
   },
   footer: {
     brandLine: "GeoScore · GEO diagnostic Chrome extension (v0.1.0)",
-    copyright: "© 2026 SEUNGWONGO.PRO · All rights reserved",
+    copyright: "© 2026 The Great Co., Ltd. · All rights reserved",
     links: { privacy: "Privacy Policy", terms: "Terms of Service", refund: "Refund Policy" },
     adminLogin: "Admin login",
     dashboard: "Dashboard",
@@ -425,12 +425,12 @@ export const en: typeof ko = {
     blockedCta: "Go to purchase",
   },
   legal: {
-    updated: "Last updated: July 28, 2026",
+    updated: "Last updated: August 19, 2026",
     backHome: "← Home",
     privacy: {
       title: "Privacy Policy",
       intro:
-        "GeoScore ('the Service') takes your privacy seriously and processes only the minimum information necessary. This policy applies to both the store (purchase) site and the Chrome extension.",
+        "GeoScore ('the Service') is operated by The Great Co., Ltd. ('the Company'). The Company takes your privacy seriously and processes only the minimum information necessary. This policy applies to both the store (purchase) site and the Chrome extension.",
       sections: [
         {
           h: "1. Information we collect",
@@ -465,15 +465,18 @@ export const en: typeof ko = {
           ],
         },
         {
-          h: "6. Contact",
-          items: ["Privacy inquiries: support@thegreat.io"],
+          h: "6. Operating company & contact",
+          items: [
+            "Operating company: The Great Co., Ltd.",
+            "Privacy inquiries: support@thegreat.io",
+          ],
         },
       ],
     },
     terms: {
       title: "Terms of Service",
       intro:
-        "These terms govern the purchase and use of the GeoScore extension. By purchasing or using the Service, you agree to these terms.",
+        "These terms govern the purchase and use of the GeoScore extension operated by The Great Co., Ltd. ('the Company'). By purchasing or using the Service, you agree to these terms.",
       sections: [
         {
           h: "1. The service",
@@ -516,15 +519,18 @@ export const en: typeof ko = {
           ],
         },
         {
-          h: "7. Contact",
-          items: ["Terms inquiries: support@thegreat.io"],
+          h: "7. Operating company & contact",
+          items: [
+            "Operating company: The Great Co., Ltd.",
+            "Terms inquiries: support@thegreat.io",
+          ],
         },
       ],
     },
     refund: {
       title: "Refund Policy",
       intro:
-        "Considering the nature of digital products (downloadable software), we operate the following refund policy to protect customers.",
+        "GeoScore is operated by The Great Co., Ltd. ('the Company'). Considering the nature of digital products (downloadable software), the Company operates the following refund policy to protect customers.",
       sections: [
         {
           h: "1. Refund window",

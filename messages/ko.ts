@@ -358,7 +358,7 @@ export const ko = {
   },
   footer: {
     brandLine: "GeoScore · GEO 진단 크롬 확장 (v0.1.0)",
-    copyright: "© 2026 SEUNGWONGO.PRO · All rights reserved",
+    copyright: "© 2026 The Great Co., Ltd. · All rights reserved",
     links: { privacy: "개인정보처리방침", terms: "이용약관", refund: "환불정책" },
     adminLogin: "관리자 로그인",
     dashboard: "대시보드",
@@ -423,12 +423,12 @@ export const ko = {
     blockedCta: "구매 페이지로 이동",
   },
   legal: {
-    updated: "최종 업데이트: 2026년 7월 28일",
+    updated: "최종 업데이트: 2026년 8월 19일",
     backHome: "← 홈으로",
     privacy: {
       title: "개인정보처리방침",
       intro:
-        "GeoScore(이하 '서비스')는 이용자의 개인정보를 중요하게 생각하며, 최소한의 정보만 처리합니다. 본 방침은 스토어(구매) 사이트와 크롬 확장 프로그램 모두에 적용됩니다.",
+        "GeoScore(이하 '서비스')는 The Great Co., Ltd.(이하 '회사')가 운영합니다. 회사는 이용자의 개인정보를 중요하게 생각하며, 최소한의 정보만 처리합니다. 본 방침은 스토어(구매) 사이트와 크롬 확장 프로그램 모두에 적용됩니다.",
       sections: [
         {
           h: "1. 수집하는 정보",
@@ -463,15 +463,18 @@ export const ko = {
           ],
         },
         {
-          h: "6. 문의",
-          items: ["개인정보 관련 문의: support@thegreat.io"],
+          h: "6. 운영 회사 및 문의",
+          items: [
+            "운영 회사: The Great Co., Ltd. (더그레이트)",
+            "개인정보 관련 문의: support@thegreat.io",
+          ],
         },
       ],
     },
     terms: {
       title: "이용약관",
       intro:
-        "본 약관은 GeoScore 확장 프로그램의 구매 및 이용에 관한 조건을 규정합니다. 서비스를 구매·이용함으로써 본 약관에 동의한 것으로 봅니다.",
+        "본 약관은 The Great Co., Ltd.(이하 '회사')가 운영하는 GeoScore 확장 프로그램의 구매 및 이용에 관한 조건을 규정합니다. 서비스를 구매·이용함으로써 본 약관에 동의한 것으로 봅니다.",
       sections: [
         {
           h: "1. 서비스 내용",
@@ -514,15 +517,18 @@ export const ko = {
           ],
         },
         {
-          h: "7. 문의",
-          items: ["약관 관련 문의: support@thegreat.io"],
+          h: "7. 운영 회사 및 문의",
+          items: [
+            "운영 회사: The Great Co., Ltd. (더그레이트)",
+            "약관 관련 문의: support@thegreat.io",
+          ],
         },
       ],
     },
     refund: {
       title: "환불정책",
       intro:
-        "디지털 제품(다운로드형 소프트웨어)의 특성을 고려하되, 이용자 보호를 위해 아래와 같은 환불 정책을 운영합니다.",
+        "GeoScore는 The Great Co., Ltd.(이하 '회사')가 운영합니다. 디지털 제품(다운로드형 소프트웨어)의 특성을 고려하되, 이용자 보호를 위해 아래와 같은 환불 정책을 운영합니다.",
       sections: [
         {
           h: "1. 환불 가능 기간",
